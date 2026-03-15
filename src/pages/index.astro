@@ -1,0 +1,79 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { supabase } from '../lib/supabase';
+import AvatarGenerator from '../components/AvatarGenerator.svelte';
+import BowButton from '../components/BowButton.svelte';
+
+// 查詢未過期的貼文，按 hot (bow_count) 排序
+const { data: posts, error } = await supabase
+  .from('posts')
+  .select(`
+    *,
+    profiles (username)
+  `)
+  .gt('expires_at', new Date().toISOString())
+  .order('bow_count', { ascending: false });
+---
+
+<Layout title="杯口杯口 PekoPeko | 今日熱門飲品">
+  <div class="container mx-auto px-4 py-20">
+    <div class="flex flex-col items-center mb-20 text-center">
+      <h1 class="text-6xl md:text-8xl font-black uppercase tracking-tighter italic title-outline mb-6">今日熱門</h1>
+      <p class="text-lg font-bold opacity-70 max-w-lg border-b-2 border-[--color-border] pb-2">只顯示 24 小時內最動人的飲品瞬間。每個人每天僅能在這裡留下一次足跡。</p>
+    </div>
+
+    {error && <div class="alert brutalist-card bg-error text-error-content max-w-md mx-auto mb-8">{error.message}</div>}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+      {posts?.map((post) => (
+        <div class="brutalist-card flex flex-col group">
+          <div class="p-4 flex items-center gap-3 border-b-4 border-[--color-border] bg-white">
+            <div class="w-10 h-10 border-2 border-[--color-border] bg-[--color-accent] flex items-center justify-center text-sm">👤</div>
+            <div class="flex flex-col">
+              <span class="font-black uppercase text-sm">{post.profiles?.username || 'ANONYMOUS'}</span>
+              <span class="text-[10px] font-bold opacity-60">{new Date(post.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+            </div>
+            <span class="brutalist-badge badge-tea text-white!">LIVE</span>
+          </div>
+          
+          <div class="p-8 flex flex-col items-center gap-8 bg-[#F5F2EA]">
+            <a href={`/post/${post.id}`} class="hover:scale-105 transition-transform">
+              <AvatarGenerator 
+                client:visible
+                drinkType={post.drink_type} 
+                flavors={post.flavors} 
+                body={post.body} 
+                mood={post.mood}
+                size={240} 
+              />
+            </a>
+            
+            <div class="flex flex-wrap justify-center gap-2">
+              {post.flavors.map((f) => (
+                <span class="brutalist-badge badge-white">{f}</span>
+              ))}
+            </div>
+
+            <div class="flex items-center justify-between w-full mt-4 border-t-2 border-[--color-border] pt-6">
+              <div class="flex gap-4 items-center">
+                <span class="text-4xl filter grayscale group-hover:grayscale-0 transition-all">{post.mood}</span>
+                {post.location_url && (
+                  <a href={post.location_url} target="_blank" class="w-8 h-8 border-2 border-[--color-border] flex items-center justify-center hover:bg-[--color-accent] transition-colors">📍</a>
+                )}
+              </div>
+              <BowButton client:load postId={post.id} initialCount={post.bow_count} />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    {(!posts || posts.length === 0) && (
+      <div class="text-center py-20 brutalist-card bg-white max-w-2xl mx-auto">
+        <p class="text-3xl font-black uppercase italic">目前還沒有貼文</p>
+        <p class="mt-2 font-bold opacity-60">成為今天第一個分享的人吧！</p>
+        <a href="/create" class="brutalist-btn-primary mt-8">立刻去發文 →</a>
+      </div>
+    )}
+  </div>
+</Layout>

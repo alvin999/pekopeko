@@ -1,0 +1,101 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { supabase } from '../lib/supabase';
+import AvatarGenerator from '../components/AvatarGenerator.svelte';
+
+// GET User
+const { data: { user } } = await supabase.auth.getUser();
+
+let profile = null;
+let posts = [];
+
+if (user) {
+  const { data: p } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single();
+  profile = p;
+
+  const { data: ps } = await supabase
+    .from('posts')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false });
+  posts = ps || [];
+}
+---
+
+<Layout title="個人檔案 | 杯口杯口">
+  <div class="container mx-auto px-4 py-20 max-w-5xl">
+    {user ? (
+      <div class="space-y-16">
+        <header class="brutalist-card bg-white p-12 flex flex-col md:flex-row items-center text-center md:text-left gap-8">
+          <div class="w-40 h-40 border-6 border-[--color-border] bg-[--color-accent] flex items-center justify-center text-6xl shadow-[8px_8px_0px_0px_var(--color-border)]">
+            👤
+          </div>
+          <div class="flex-1">
+            <div class="brutalist-badge badge-coffee text-sm! px-4! italic mb-2">USER PROFILE</div>
+            <h1 class="text-6xl font-black italic title-outline mb-2 uppercase tracking-tighter">{profile?.username || 'ANONYMOUS'}</h1>
+            <p class="font-bold opacity-60 text-lg">
+              ACCUMULATED <span class="bg-[--color-accent] px-2 border-2 border-[--color-border]">{profile?.total_bows_received || 0}</span> BOWS RECEIVED 🙏
+            </p>
+          </div>
+        </header>
+
+        <div class="relative">
+          <div class="absolute inset-0 flex items-center" aria-hidden="true">
+            <div class="w-full border-t-4 border-[--color-border]"></div>
+          </div>
+          <div class="relative flex justify-center">
+            <span class="bg-[--color-bg] px-6 font-black uppercase italic tracking-widest text-sm">Historical Footprint</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+          {posts.map((post) => (
+            <a href={`/post/${post.id}`} class="brutalist-card bg-white p-4 hover:scale-105 transition-transform flex flex-col items-center gap-4">
+              <div class="bg-[#F5F2EA] p-4 border-2 border-[--color-border] w-full flex justify-center shadow-[4px_4px_0px_0px_var(--color-border)]">
+                <AvatarGenerator 
+                  client:load
+                  drinkType={post.drink_type} 
+                  flavors={post.flavors} 
+                  body={post.body} 
+                  size={120} 
+                />
+              </div>
+              <div class="font-black text-[10px] uppercase opacity-50 border-t-2 border-[--color-border] w-full pt-2 text-center">
+                {new Date(post.created_at).toLocaleDateString()}
+              </div>
+            </a>
+          ))}
+        </div>
+
+        {posts.length === 0 && (
+          <div class="brutalist-card bg-white p-20 text-center opacity-50">
+            <p class="font-black italic text-xl uppercase">No records found.</p>
+            <p class="mt-2 text-sm font-bold">START YOUR JOURNEY TODAY.</p>
+          </div>
+        )}
+      </div>
+    ) : (
+      <div class="brutalist-card bg-white p-20 text-center max-w-2xl mx-auto">
+        <h1 class="text-4xl font-black italic title-outline mb-8 uppercase">Authentication Required</h1>
+        <p class="font-bold opacity-60 mb-12">請先登入以查看您的個人飲品統計與日誌。</p>
+        <button class="brutalist-btn-primary !px-12 !py-4 scale-110" id="login-trigger">SIGN IN WITH GOOGLE</button>
+      </div>
+    )}
+  </div>
+
+  <script>
+    import { supabase } from '../lib/supabase';
+    document.getElementById('login-trigger')?.addEventListener('click', async () => {
+      await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+    });
+  </script>
+</Layout>

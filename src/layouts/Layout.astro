@@ -1,0 +1,58 @@
+---
+import '../styles/global.css';
+const { title = "杯口杯口 PekoPeko" } = Astro.props;
+---
+
+<html lang="zh-Hant">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{title}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Lexend:wght@800&display=swap" rel="stylesheet">
+	</head>
+	<body class="min-h-screen flex flex-col pt-20">
+    <nav class="fixed top-4 left-4 right-4 z-50 px-4 md:px-8 bg-white border-4 border-[--color-border] shadow-[--brutalist-shadow-sm] h-16 flex items-center">
+      <div class="flex-1">
+        <a href="/" class="text-2xl font-black tracking-tighter uppercase italic title-outline">PekoPeko</a>
+      </div>
+      <div class="flex-none gap-4 flex items-center">
+        <a href="/create" class="brutalist-btn-primary scale-90 md:scale-100">+ 紀錄今日</a>
+        <div class="dropdown dropdown-end">
+          <div tabindex="0" role="button" class="border-2 border-[--color-border] bg-white p-1 hover:bg-[--color-accent] transition-colors">
+            <div class="w-8 h-8 flex items-center justify-center text-lg">
+              <span>👤</span>
+            </div>
+          </div>
+          <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 bg-white border-3 border-[--color-border] shadow-[4px_4px_0px_0px_var(--color-border)] w-52">
+            <li><a href="/profile" class="font-bold">個人檔案</a></li>
+            <li><button id="logout-btn" class="font-bold text-error">登出</button></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <main class="flex-1">
+      <slot />
+    </main>
+
+    <footer class="footer footer-center p-10 bg-white border-t-4 border-[--color-border] text-[--color-text] mt-20">
+      <nav>
+        <div class="grid grid-flow-col gap-4">
+          <p class="font-bold uppercase tracking-widest text-sm">© 2026 PekoPeko - 精緻飲品日誌</p>
+        </div>
+      </nav>
+    </footer>
+
+    <script>
+      import { supabase } from '../lib/supabase';
+      document.getElementById('logout-btn')?.addEventListener('click', async () => {
+        await supabase.auth.signOut();
+        window.location.href = '/';
+      });
+    </script>
+	</body>
+</html>

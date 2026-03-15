@@ -1,0 +1,10 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PostEditor from '../components/PostEditor.svelte';
+---
+
+<Layout title="建立今日飲品 | 杯口杯口">
+  <div class="py-12">
+    <PostEditor client:load />
+  </div>
+</Layout>
