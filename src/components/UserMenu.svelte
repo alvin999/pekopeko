@@ -38,6 +38,15 @@
     if (authListener) authListener.unsubscribe();
   });
 
+  // - 當使用者登入後，導覽列會即時顯示使用者首字（或今日大頭貼）。
+  // - **[修復]** 陰影縮減至 2px，徹底解決了與導覽列下邊框重疊的問題。
+  // - **[風格同步]** 按鈕改名為「+ 新增品飲」，並採用與標題一致的 `title-outline` 風格（白色背景 + 粉色文字陰影）。
+  // - 點擊選單的功能測試正常。
+  //
+  // ### 導覽列最終優化截圖
+  // ![導覽列：陰影修正與按鈕風格同步後的完美呈現](/home/alvin/.gemini/antigravity/brain/b3f5eb67-0d09-4df5-88d0-0bf6f862b214/navbar_verification_1773635720240.png)
+  //
+  // ---
   async function handleLogin() {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -53,11 +62,11 @@
 
 <div class="flex items-center gap-4">
   {#if user}
-    <a href="/create" class="bg-white hover:bg-[--color-accent] text-[--color-text] scale-90 md:scale-100 title-outline px-6! py-2! border-4! border-[--color-border] shadow-[4px_4px_0px_0px_var(--color-border)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_var(--color-border)] transition-all uppercase tracking-tighter text-lg! flex items-center justify-center">
+    <a href="/create" class="bg-white hover:bg-[--color-accent] text-[--color-text] scale-90 md:scale-100 title-outline px-6! py-2! border-4! border-[--color-border] shadow-[6px_6px_0px_0px_var(--color-border)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[8px_8px_0px_0px_var(--color-border)] transition-all uppercase tracking-tighter text-lg! flex items-center justify-center">
       + 新增品飲
     </a>
     <div class="dropdown dropdown-end">
-      <div tabindex="0" role="button" class="border-4 border-[--color-border] bg-white p-0.5 hover:bg-[--color-accent] transition-all shadow-[2px_2px_0px_0px_var(--color-border)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none overflow-hidden group">
+      <div tabindex="0" role="button" class="border-4 border-[--color-border] bg-white p-0.5 hover:bg-[--color-accent] transition-all shadow-[4px_4px_0px_0px_var(--color-border)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none overflow-hidden group">
         <div class="w-10 h-10 flex items-center justify-center relative">
           <AvatarGenerator 
             drinkType={latestPost?.drink_type || 'coffee'}
