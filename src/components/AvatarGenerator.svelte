@@ -129,7 +129,7 @@
   $: cupPath = cupPaths[body];
 </script>
 
-<div class="avatar-container relative inline-block overflow-hidden" style="width: {size}px; height: {size}px;">
+<div class="avatar-container relative inline-block overflow-hidden" style="width: {size}px; height: {size}px; filter: drop-shadow(4px 4px 0px #2D2D2D);">
   <svg viewBox="0 0 300 300" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <!-- Solid Colors instead of Gradients for Brutalist -->
