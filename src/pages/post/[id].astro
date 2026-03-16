@@ -52,7 +52,14 @@ if (mapUrl && !mapUrl.includes('hl=')) {
             <div class="brutalist-badge badge-coffee text-sm! px-4! mb-4">SPECIFICATIONS</div>
             <h1 class="text-5xl font-black italic title-outline mb-4">{drinkTitle}</h1>
             <p class="font-bold opacity-60 uppercase tracking-widest text-xs border-b-2 border-[--color-border] pb-4">
-              TIMESTAMP: {new Date(post.created_at).toLocaleString()}
+              TIMESTAMP: {new Intl.DateTimeFormat(userLang, {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+              }).format(new Date(post.created_at))}
             </p>
           </div>
 
