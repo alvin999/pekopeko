@@ -10,7 +10,8 @@ const { data: posts, error } = await supabase
   .select(
     `
     *,
-    profiles (username)
+    profiles (username),
+    item_name
   `,
   )
   .gt("expires_at", new Date().toISOString())
@@ -63,7 +64,7 @@ function getRemainingTime(expiresAt: string) {
               </div>
               <div class="flex flex-col">
                 <span class="font-black uppercase text-sm">
-                  {post.profiles?.username || "ANONYMOUS"}
+                  {post.item_name || (post.drink_type === 'coffee' ? '咖啡' : '茶')}
                 </span>
                 <span
                   class="text-[10px] font-bold opacity-60"
@@ -98,7 +99,7 @@ function getRemainingTime(expiresAt: string) {
               </a>
 
               <div class="flex flex-wrap justify-center gap-2">
-                {post.flavors.map((f) => (
+                {post.flavors.map((f: string) => (
                   <span class="brutalist-badge badge-white">{f}</span>
                 ))}
               </div>

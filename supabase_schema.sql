@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS public.posts (
   mood text,
   location_url text,
   location_name text,
+  item_name text,
   -- SCA CVA 欄位
   flavor_intensity text CHECK (flavor_intensity IN ('low', 'medium', 'high')),
   main_tastes text[], -- 選 2 個

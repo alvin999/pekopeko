@@ -1,10 +1,17 @@
 <script lang="ts">
-  export let svgElement: HTMLElement;
+  export let svgElement: HTMLElement | null = null;
   export let drinkName = "PekoPeko Drink";
 
+  function getSvgTarget() {
+    return svgElement || document.getElementById('avatar-target');
+  }
+
   function downloadSVG() {
-    if (!svgElement) return;
-    const svgData = new XMLSerializer().serializeToString(svgElement.querySelector('svg')!);
+    const target = getSvgTarget();
+    if (!target) return;
+    const svg = target.querySelector('svg');
+    if (!svg) return;
+    const svgData = new XMLSerializer().serializeToString(svg);
     const svgBlob = new Blob([svgData], {type: "image/svg+xml;charset=utf-8"});
     const url = URL.createObjectURL(svgBlob);
     const link = document.createElement("a");

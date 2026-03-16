@@ -11,7 +11,8 @@ const { data: post, error } = await supabase
   .from('posts')
   .select(`
     *,
-    profiles (username)
+    profiles (username),
+    item_name
   `)
   .eq('id', id)
   .single();
@@ -20,7 +21,8 @@ if (!post) {
   return Astro.redirect('/404');
 }
 
-const drinkTitle = `${post.profiles?.username || '大師'} 的今日${post.drink_type === 'coffee' ? '咖啡' : '茶'}`;
+const drinkName = post.item_name || (post.drink_type === 'coffee' ? '咖啡' : '茶');
+const drinkTitle = `今日的${drinkName}`;
 
 // 偵測語言並處理地圖連結
 const acceptLang = Astro.request.headers.get('accept-language') || 'zh-TW';
@@ -68,7 +70,7 @@ if (mapUrl && !mapUrl.includes('hl=')) {
           <div class="space-y-4">
             <p class="font-black text-xs uppercase tracking-tighter opacity-40">Flavor Profile</p>
             <div class="flex flex-wrap gap-3">
-              {post.flavors.map((f) => (
+              {post.flavors.map((f: string) => (
                 <span class="brutalist-badge badge-white text-sm! px-4!">{f}</span>
               ))}
               <span class="brutalist-badge badge-tea text-white! text-sm! px-4! uppercase">MOUTHFEEL: {post.mouthfeel}</span>
