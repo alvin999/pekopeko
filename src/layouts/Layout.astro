@@ -19,19 +19,9 @@ const { title = "杯口杯口 PekoPeko" } = Astro.props;
       <div class="flex-1">
         <a href="/" class="text-2xl font-black tracking-tighter uppercase italic title-outline">PekoPeko</a>
       </div>
-      <div class="flex-none gap-4 flex items-center">
-        <a href="/create" class="brutalist-btn-primary scale-90 md:scale-100">+ 紀錄今日</a>
-        <div class="dropdown dropdown-end">
-          <div tabindex="0" role="button" class="border-2 border-[--color-border] bg-white p-1 hover:bg-[--color-accent] transition-colors">
-            <div class="w-8 h-8 flex items-center justify-center text-lg">
-              <span>👤</span>
-            </div>
-          </div>
-          <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 bg-white border-3 border-[--color-border] shadow-[4px_4px_0px_0px_var(--color-border)] w-52">
-            <li><a href="/profile" class="font-bold">個人檔案</a></li>
-            <li><button id="logout-btn" class="font-bold text-error">登出</button></li>
-          </ul>
-        </div>
+      <div class="flex-none gap-4 flex items-center" id="auth-nav">
+        <!-- Auth status will be injected here by script -->
+        <div class="animate-pulse bg-gray-200 h-10 w-24"></div>
       </div>
     </nav>
 
@@ -49,9 +39,56 @@ const { title = "杯口杯口 PekoPeko" } = Astro.props;
 
     <script>
       import { supabase } from '../lib/supabase';
-      document.getElementById('logout-btn')?.addEventListener('click', async () => {
-        await supabase.auth.signOut();
-        window.location.href = '/';
+
+      const authNav = document.getElementById('auth-nav');
+
+      function updateNav(user) {
+        if (!authNav) return;
+
+        if (user) {
+          authNav.innerHTML = `
+            <a href="/create" class="brutalist-btn-primary scale-90 md:scale-100">+ 紀錄今日</a>
+            <div class="dropdown dropdown-end">
+              <div tabindex="0" role="button" class="border-2 border-[--color-border] bg-white p-1 hover:bg-[--color-accent] transition-colors">
+                <div class="w-8 h-8 flex items-center justify-center text-lg">
+                  <span>${user.user_metadata?.full_name?.charAt(0) || '👤'}</span>
+                </div>
+              </div>
+              <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 bg-white border-3 border-[--color-border] shadow-[4px_4px_0px_0px_var(--color-border)] w-52">
+                <li><a href="/profile" class="font-bold">個人檔案</a></li>
+                <li><button id="logout-btn" class="font-bold text-error">登出</button></li>
+              </ul>
+            </div>
+          `;
+          
+          document.getElementById('logout-btn')?.addEventListener('click', async () => {
+            await supabase.auth.signOut();
+            window.location.href = '/';
+          });
+        } else {
+          authNav.innerHTML = `
+            <button id="login-btn" class="brutalist-btn-primary scale-90 md:scale-100">使用 GOOGLE 登入</button>
+          `;
+
+          document.getElementById('login-btn')?.addEventListener('click', async () => {
+            await supabase.auth.signInWithOAuth({
+              provider: 'google',
+              options: {
+                redirectTo: window.location.origin
+              }
+            });
+          });
+        }
+      }
+
+      // Initial check
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        updateNav(user);
+      });
+
+      // Listen for changes
+      supabase.auth.onAuthStateChange((_event, session) => {
+        updateNav(session?.user || null);
       });
     </script>
 	</body>
