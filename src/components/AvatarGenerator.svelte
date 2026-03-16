@@ -175,8 +175,4 @@
   </svg>
 </div>
 
-<style>
-  .avatar-container {
-    filter: drop-shadow(4px 4px 0px #2D2D2D);
-  }
-</style>
+
