@@ -41,7 +41,7 @@ if (mapUrl && !mapUrl.includes('hl=')) {
             client:load
             drinkType={post.drink_type} 
             flavors={post.flavors} 
-            body={post.body} 
+            mouthfeel={post.mouthfeel} 
             mood={post.mood} 
             size={400} 
           />
@@ -71,7 +71,7 @@ if (mapUrl && !mapUrl.includes('hl=')) {
               {post.flavors.map((f) => (
                 <span class="brutalist-badge badge-white text-sm! px-4!">{f}</span>
               ))}
-              <span class="brutalist-badge badge-tea text-white! text-sm! px-4!">BODY: {post.body}</span>
+              <span class="brutalist-badge badge-tea text-white! text-sm! px-4! uppercase">MOUTHFEEL: {post.mouthfeel}</span>
             </div>
           </div>
 

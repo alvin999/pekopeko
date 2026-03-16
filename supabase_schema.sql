@@ -12,9 +12,17 @@ CREATE TABLE IF NOT EXISTS public.posts (
   user_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
   drink_type text CHECK (drink_type IN ('coffee', 'tea')),
   flavors text[],
-  body text CHECK (body IN ('light', 'round', 'heavy')),
   mood text,
   location_url text,
+  location_name text,
+  -- SCA CVA 欄位
+  flavor_intensity text CHECK (flavor_intensity IN ('low', 'medium', 'high')),
+  main_tastes text[], -- 選 2 個
+  acidity_intensity text CHECK (acidity_intensity IN ('low', 'medium', 'high')),
+  acidity_type text CHECK (acidity_type IN ('dry', 'sweet')),
+  sweetness_intensity text CHECK (sweetness_intensity IN ('low', 'medium', 'high')),
+  mouthfeel text CHECK (mouthfeel IN ('low', 'medium', 'high')),
+  mouthfeel_types text[], -- 選 2 個
   bow_count int DEFAULT 0,
   created_at timestamptz DEFAULT now(),
   expires_at timestamptz DEFAULT (now() + interval '24 hours')

@@ -71,7 +71,7 @@
           <AvatarGenerator 
             drinkType={latestPost?.drink_type || 'coffee'}
             flavors={latestPost?.flavors || []}
-            body={latestPost?.body || 'round'}
+            mouthfeel={latestPost?.mouthfeel || 'medium'}
             mood={latestPost?.mood || '😊'}
             size={40}
             isEmpty={!latestPost}

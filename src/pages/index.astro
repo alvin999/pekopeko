@@ -58,7 +58,7 @@ function getRemainingTime(expiresAt: string) {
         posts?.map((post) => (
           <div class="brutalist-card flex flex-col group">
             <div class="p-4 flex items-center gap-3 border-b-4 border-[--color-border] bg-white">
-              <div class="w-10 h-10 border-2 border-[--color-border] bg-[--color-accent] flex items-center justify-center text-sm">
+              <div class="w-10 h-10 border-2 border-[--color-border] bg-accent flex items-center justify-center text-sm">
                 👤
               </div>
               <div class="flex flex-col">
@@ -91,7 +91,7 @@ function getRemainingTime(expiresAt: string) {
                   client:visible
                   drinkType={post.drink_type}
                   flavors={post.flavors}
-                  body={post.body}
+                  mouthfeel={post.mouthfeel}
                   mood={post.mood}
                   size={240}
                 />
@@ -114,11 +114,11 @@ function getRemainingTime(expiresAt: string) {
                       target="_blank"
                       class="flex items-center gap-2 group/loc"
                     >
-                      <span class="w-8 h-8 border-2 border-[--color-border] flex items-center justify-center hover:bg-[--color-accent] transition-colors">
+                      <span class="w-8 h-8 border-2 border-[--color-border] flex items-center justify-center hover:bg-accent transition-colors">
                         📍
                       </span>
                       {post.location_name && (
-                        <span class="text-[10px] font-black uppercase underline decoration-2 underline-offset-2 group-hover/loc:decoration-[--color-accent]">
+                        <span class="text-[10px] font-black uppercase underline decoration-2 underline-offset-2 group-hover/loc:decoration-accent">
                           {post.location_name}
                         </span>
                       )}

@@ -1,18 +1,26 @@
 @import "tailwindcss";
 @plugin "daisyui";
 
-:root {
-  /* Morandi Palette */
+@theme {
+  --color-accent: #ffd43b;
   --color-bg: #DED6C1;
   --color-coffee: #9E8976;
   --color-tea: #B2B28B;
-  --color-accent: #D6A2A2;
   --color-border: #2D2D2D;
   --color-text: #2D2D2D;
   
-  /* Brutalist Config */
-  --brutalist-shadow: 6px 6px 0px 0px var(--color-border);
-  --brutalist-shadow-sm: 4px 4px 0px 0px var(--color-border);
+  --shadow-brutalist: 6px 6px 0px 0px var(--color-border);
+  --shadow-brutalist-sm: 4px 4px 0px 0px var(--color-border);
+}
+
+:root {
+  /* 供 Svelte 組件內部或 SVG 動態引用的變數 */
+  --color-bg: #DED6C1;
+  --color-coffee: #9E8976;
+  --color-tea: #B2B28B;
+  --color-accent: #ffd43b;
+  --color-border: #2D2D2D;
+  --color-text: #2D2D2D;
 }
 
 /* Base Utility Classes defined as plain CSS to ensure availability */
