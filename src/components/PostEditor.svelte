@@ -8,15 +8,32 @@
   let body: "light" | "round" | "heavy" = "round";
   let mood = "🙂";
   let locationUrl = "";
-  let shopSearchName = ""; // 新增店名搜尋
-  let currentCoords: { lat: number; lng: number } | null = null; // 存儲座標
+  let shopSearchName = ""; 
+  let currentCoords: { lat: number; lng: number } | null = null; 
   let isLoadingLocation = false;
+  let isFetchingShopName = false;
   let searchUrl = "";
   let embedUrl = "";
   let isLoading = false;
-  let userLang = "zh-TW"; // 預設值
+  let userLang = "zh-TW"; 
   let errorMsg = "";
   let hasPostedToday = false;
+
+  async function autoFetchShopName(url: string) {
+    if (!url) return;
+    isFetchingShopName = true;
+    try {
+      const res = await fetch(`/api/fetch-map-title?url=${encodeURIComponent(url)}`);
+      const data = await res.json();
+      if (data.title) {
+        shopSearchName = data.title;
+      }
+    } catch (err) {
+      console.error("Failed to fetch shop name", err);
+    } finally {
+      isFetchingShopName = false;
+    }
+  }
 
   // 自動偵測剪貼簿內容
   async function handlePasteCheck() {
@@ -33,7 +50,8 @@
       
       if (isMapsUrl) {
         locationUrl = text;
-        // 視覺回饋：閃爍綠色 (這裡使用 accent 顏色)
+        autoFetchShopName(text);
+        // 視覺回饋：閃爍綠色
         const input = document.getElementById("location-url-input");
         if (input) {
           input.classList.add("bg-[--color-accent]", "scale-[1.02]");
@@ -413,9 +431,14 @@
                   <input 
                     type="text"
                     placeholder="搜尋特定店名..."
-                    class="w-full bg-white border-2 border-[--color-border] px-3 py-2 text-xs font-bold focus:bg-[--color-accent] outline-none"
+                    class="w-full bg-white border-2 border-[--color-border] px-3 py-2 text-xs font-bold focus:bg-[--color-accent] outline-none {isFetchingShopName ? 'pr-10' : ''}"
                     bind:value={shopSearchName}
                   />
+                  {#if isFetchingShopName}
+                    <div class="absolute right-3 top-1/2 -translate-y-1/2">
+                      <span class="loading loading-spinner loading-xs"></span>
+                    </div>
+                  {/if}
                 </div>
 
                 <!-- 嵌入地圖 (有座標才顯示) -->

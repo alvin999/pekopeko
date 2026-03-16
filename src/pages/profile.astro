@@ -51,7 +51,7 @@ import Layout from '../layouts/Layout.astro';
                 </div>
                 <div class="font-black text-[10px] uppercase opacity-50 border-t-2 border-[--color-border] w-full pt-2 text-center flex flex-col gap-1">
                   <span>${new Date(post.created_at).toLocaleDateString()}</span>
-                  ${post.location_name ? `<span class="text-[8px] truncate">@ ${post.location_name}</span>` : ''}
+                  ${post.location_name ? `<span class="text-[8px] truncate uppercase">@ ${post.location_name}</span>` : ''}
                 </div>
               </a>
             `).join('')}
