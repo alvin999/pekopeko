@@ -80,12 +80,18 @@
         </div>
       </div>
       <ul tabindex="0" class="menu menu-sm dropdown-content mt-4 z-[1] p-2 bg-white border-4 border-[--color-border] shadow-[8px_8px_0px_0px_var(--color-border)] w-52">
-        <li class="px-2 py-1 mb-2 border-b-2 border-dashed border-[--color-border]">
-          <span class="font-black text-[10px] uppercase opacity-40">Account</span>
-          <span class="font-bold truncate">{user.user_metadata?.full_name || 'Anonymous'}</span>
+        <li class="px-4 py-2 mb-2 border-b-2 border-dashed border-[--color-border] pointer-events-none">
+          <span class="font-black text-[10px] uppercase opacity-40 p-0!">Account</span>
         </li>
-        <li><a href="/profile" class="font-bold hover:bg-[--color-accent]! transition-colors">個人檔案</a></li>
-        <li><button on:click={handleLogout} class="font-bold text-error hover:bg-red-50! transition-colors">登出</button></li>
+        <li>
+          <a href="/profile" class="font-bold truncate hover:bg-[--color-accent]! transition-colors flex flex-col items-start gap-0.5">
+            <span class="text-xs opacity-60 font-medium">View Profile</span>
+            <span class="text-base">{user.user_metadata?.full_name || 'Anonymous'}</span>
+          </a>
+        </li>
+        <li class="mt-2 border-t-2 border-[--color-border] pt-2">
+          <button on:click={handleLogout} class="font-bold text-error hover:bg-red-50! transition-colors">登出</button>
+        </li>
       </ul>
     </div>
   {:else}

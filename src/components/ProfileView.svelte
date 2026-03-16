@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { supabase } from '../lib/supabase';
   import AvatarGenerator from './AvatarGenerator.svelte';
+  import BowButton from './BowButton.svelte';
 
   let user: any = null;
   let profile: any = null;
@@ -20,7 +21,7 @@
         supabase.from('posts')
           .select('*')
           .eq('user_id', user.id)
-          .gt('created_at', twentyFourHoursAgo)
+          .gt('expires_at', new Date().toISOString())
           .order('created_at', { ascending: false })
           .limit(1)
       ]);
@@ -36,6 +37,15 @@
       provider: 'google',
       options: { redirectTo: window.location.origin + '/profile' }
     });
+  }
+
+  function getRemainingTime(expiresAt: string) {
+    if (!expiresAt) return '';
+    const diff = new Date(expiresAt).getTime() - Date.now();
+    if (diff <= 0) return 'EXPIRED';
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    return `${hours}H ${minutes}M LEFT`;
   }
 </script>
 
@@ -87,11 +97,47 @@
             
             <div class="mt-4 pt-6 border-t-2 border-[--color-border] border-dashed">
               {#if latestPost}
-                <div class="flex flex-col gap-2">
-                  <span class="text-xs font-black uppercase tracking-widest opacity-40">Status</span>
-                  <div class="flex items-center gap-3">
-                    <span class="brutalist-badge badge-tea text-white!">ACTIVE TODAY</span>
-                    <span class="font-bold text-sm italic">已記錄今日的飲品瞬間。</span>
+                <div class="space-y-6">
+                  <div class="flex flex-wrap items-center gap-3">
+                    <span class="brutalist-badge badge-tea text-white!">
+                      {getRemainingTime(latestPost.expires_at)}
+                    </span>
+                    <span class="text-xs font-bold opacity-60 italic">
+                      {new Intl.DateTimeFormat('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(latestPost.created_at))} POSTED
+                    </span>
+                  </div>
+
+                  <div class="bg-[#F5F2EA] p-6 border-2 border-[--color-border] space-y-4">
+                    <div class="flex flex-wrap gap-2">
+                      {#if latestPost.flavors && latestPost.flavors.length > 0}
+                        {#each latestPost.flavors as f}
+                          <span class="brutalist-badge badge-white text-[10px]!">{f}</span>
+                        {/each}
+                      {:else}
+                        <span class="text-[10px] font-bold opacity-30 italic">NO FLAVOR TAGS PROVIDED</span>
+                      {/if}
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-4">
+                        <span class="text-3xl" title="Mood">{latestPost.mood}</span>
+                        {#if latestPost.location_name || latestPost.location_url}
+                          <div class="flex items-center gap-2">
+                            <span class="w-7 h-7 border-2 border-[--color-border] flex items-center justify-center text-xs bg-white">📍</span>
+                            {#if latestPost.location_url && latestPost.location_name}
+                              <a href={latestPost.location_url} target="_blank" class="text-[10px] font-black uppercase underline decoration-2 underline-offset-2 hover:text-[--color-accent] transition-colors">{latestPost.location_name}</a>
+                            {:else if latestPost.location_name}
+                              <span class="text-[10px] font-black uppercase">{latestPost.location_name}</span>
+                            {:else if latestPost.location_url}
+                              <a href={latestPost.location_url} target="_blank" class="text-[10px] font-black uppercase underline hover:text-[--color-accent]">VIEW LOCATION</a>
+                            {/if}
+                          </div>
+                        {:else}
+                          <span class="text-[10px] font-bold opacity-30 italic">NO LOCATION SHARED</span>
+                        {/if}
+                      </div>
+                      <BowButton postId={latestPost.id} initialCount={latestPost.bow_count} />
+                    </div>
                   </div>
                 </div>
               {:else}
@@ -107,6 +153,7 @@
           </div>
         </div>
       </header>
+
     </div>
   {/if}
 </div>
