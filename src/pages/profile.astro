@@ -1,136 +1,112 @@
 ---
+// Force redeploy triggered by UI verification feedback
 import Layout from '../layouts/Layout.astro';
+import { supabase } from '../lib/supabase';
+import AvatarGenerator from '../components/AvatarGenerator.svelte';
+
+// Server-side auth check
+const { data: { user } } = await supabase.auth.getUser();
+
+let profile = null;
+let latestPost = null;
+
+if (user) {
+  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  
+  const [profileRes, postsRes] = await Promise.all([
+    supabase.from('profiles').select('*').eq('id', user.id).single(),
+    supabase.from('posts')
+      .select('*')
+      .eq('user_id', user.id)
+      .gt('created_at', twentyFourHoursAgo)
+      .order('created_at', { ascending: false })
+      .limit(1)
+  ]);
+  
+  profile = profileRes.data;
+  latestPost = postsRes.data && postsRes.data.length > 0 ? postsRes.data[0] : null;
+}
 ---
 
 <Layout title="個人檔案 | 杯口杯口">
   <div class="container mx-auto px-4 py-20 max-w-5xl" id="profile-content">
-    <div class="flex flex-col items-center justify-center min-vh-50">
-      <div class="loading loading-spinner loading-lg"></div>
-      <p class="mt-4 font-bold opacity-50 text-xl italic uppercase">Waking up the database...</p>
-    </div>
+    {!user ? (
+      <div class="brutalist-card bg-white p-20 text-center max-w-2xl mx-auto shadow-[12px_12px_0px_0px_var(--color-border)] border-6 border-[--color-border]">
+        <h1 class="text-4xl font-black italic title-outline mb-8 uppercase">Authentication Required</h1>
+        <p class="font-bold opacity-60 mb-12 text-lg">請先登入以查看您的個人飲品統計與日誌。</p>
+        <button class="brutalist-btn-primary !px-12 !py-4 scale-110" id="login-trigger-profile">SIGN IN WITH GOOGLE</button>
+      </div>
+    ) : (
+      <div class="space-y-16">
+        <header class="brutalist-card bg-white p-12 flex flex-col md:flex-row items-center text-center md:text-left gap-8 border-6 border-[--color-border] shadow-[12px_12px_0px_0px_var(--color-border)] relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-32 h-32 bg-[--color-accent] -mr-16 -mt-16 rotate-45 opacity-20"></div>
+          
+          <div class="relative group">
+            <div class="w-48 h-48 border-6 border-[--color-border] bg-white flex items-center justify-center shadow-[8px_8px_0px_0px_var(--color-border)] overflow-hidden transition-transform group-hover:scale-105">
+              <AvatarGenerator 
+                client:load
+                drinkType={latestPost?.drink_type || 'coffee'}
+                flavors={latestPost?.flavors || []}
+                body={latestPost?.body || 'round'}
+                mood={latestPost?.mood || '😊'}
+                size={192}
+                isEmpty={!latestPost}
+              />
+            </div>
+            {!latestPost && (
+              <div class="absolute -bottom-4 -right-4 bg-white border-4 border-[--color-border] px-3 py-1 font-black text-[10px] italic shadow-[4px_4px_0px_0px_var(--color-border)] animate-bounce">
+                EMPTY CUP ☕️
+              </div>
+            )}
+          </div>
+
+          <div class="flex-1">
+            <div class="brutalist-badge badge-coffee text-sm! px-4! italic mb-4">USER PROFILE</div>
+            <h1 class="text-6xl md:text-7xl font-black italic title-outline mb-4 uppercase tracking-tighter">{profile?.username || user.user_metadata?.full_name || 'ANONYMOUS'}</h1>
+            
+            <div class="flex flex-col gap-4">
+              <p class="font-bold opacity-60 text-lg">
+                ACCUMULATED <span class="bg-[--color-accent] px-2 border-2 border-[--color-border]">{profile?.total_bows_received || 0}</span> BOWS RECEIVED 🙏
+              </p>
+              
+              <div class="mt-4 pt-6 border-t-2 border-[--color-border] border-dashed">
+                {latestPost ? (
+                  <div class="flex flex-col gap-2">
+                    <span class="text-xs font-black uppercase tracking-widest opacity-40">Status</span>
+                    <div class="flex items-center gap-3">
+                      <span class="brutalist-badge badge-tea text-white!">ACTIVE TODAY</span>
+                      <span class="font-bold text-sm italic">已記錄今日的飲品瞬間。</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div class="flex flex-col gap-4">
+                    <div class="flex items-center gap-3">
+                      <span class="brutalist-badge bg-gray-400 text-white!">NO POST TODAY</span>
+                      <span class="font-bold text-sm italic opacity-60">今天還沒留下足跡呢？</span>
+                    </div>
+                    <a href="/create" class="brutalist-btn-primary !py-3 !text-sm max-w-xs text-center">立刻分享今日飲品 →</a>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </header>
+      </div>
+    )}
   </div>
 
   <script>
     import { supabase } from '../lib/supabase';
-
-    async function loadProfile() {
-      const contentEl = document.getElementById('profile-content');
-      if (!contentEl) return;
-
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
-        contentEl.innerHTML = `
-          <div class="brutalist-card bg-white p-20 text-center max-w-2xl mx-auto shadow-[12px_12px_0px_0px_var(--color-border)] border-6 border-[--color-border]">
-            <h1 class="text-4xl font-black italic title-outline mb-8 uppercase">Authentication Required</h1>
-            <p class="font-bold opacity-60 mb-12 text-lg">請先登入以查看您的個人飲品統計與日誌。</p>
-            <button class="brutalist-btn-primary !px-12 !py-4 scale-110" id="login-trigger-profile">SIGN IN WITH GOOGLE</button>
-          </div>
-        `;
-        document.getElementById('login-trigger-profile')?.addEventListener('click', async () => {
-          await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: { redirectTo: window.location.origin + '/profile' }
-          });
-        });
-        return;
-      }
-
-      // Fetch Profile & Latest Post (within 24 hours)
-      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      
-      const [{ data: profile }, { data: posts }] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', user.id).single(),
-        supabase.from('posts')
-          .select('*')
-          .eq('user_id', user.id)
-          .gt('created_at', twentyFourHoursAgo)
-          .order('created_at', { ascending: false })
-          .limit(1)
-      ]);
-
-      const latestPost = posts && posts.length > 0 ? posts[0] : null;
-
-      contentEl.innerHTML = `
-        <div class="space-y-16">
-          <header class="brutalist-card bg-white p-12 flex flex-col md:flex-row items-center text-center md:text-left gap-8 border-6 border-[--color-border] shadow-[12px_12px_0px_0px_var(--color-border)] relative overflow-hidden">
-            <!-- Dynamic Background Element -->
-            <div class="absolute top-0 right-0 w-32 h-32 bg-[--color-accent] -mr-16 -mt-16 rotate-45 opacity-20"></div>
-            
-            <div class="relative group">
-              <div id="avatar-root" class="w-48 h-48 border-6 border-[--color-border] bg-white flex items-center justify-center shadow-[8px_8px_0px_0px_var(--color-border)] overflow-hidden transition-transform group-hover:scale-105">
-                <!-- Avatar will be rendered here via Svelte -->
-              </div>
-              ${!latestPost ? `
-                <div class="absolute -bottom-4 -right-4 bg-white border-4 border-[--color-border] px-3 py-1 font-black text-[10px] italic shadow-[4px_4px_0px_0px_var(--color-border)] animate-bounce">
-                  EMPTY CUP ☕️
-                </div>
-              ` : ''}
-            </div>
-
-            <div class="flex-1">
-              <div class="brutalist-badge badge-coffee text-sm! px-4! italic mb-4">USER PROFILE</div>
-              <h1 class="text-6xl md:text-7xl font-black italic title-outline mb-4 uppercase tracking-tighter">${profile?.username || user.user_metadata?.full_name || 'ANONYMOUS'}</h1>
-              
-              <div class="flex flex-col gap-4">
-                <p class="font-bold opacity-60 text-lg">
-                  ACCUMULATED <span class="bg-[--color-accent] px-2 border-2 border-[--color-border]">${profile?.total_bows_received || 0}</span> BOWS RECEIVED 🙏
-                </p>
-                
-                <div class="mt-4 pt-6 border-t-2 border-[--color-border] border-dashed">
-                  ${latestPost ? `
-                    <div class="flex flex-col gap-2">
-                      <span class="text-xs font-black uppercase tracking-widest opacity-40">Status</span>
-                      <div class="flex items-center gap-3">
-                        <span class="brutalist-badge badge-tea text-white!">ACTIVE TODAY</span>
-                        <span class="font-bold text-sm italic">已記錄今日的飲品瞬間。</span>
-                      </div>
-                    </div>
-                  ` : `
-                    <div class="flex flex-col gap-4">
-                      <div class="flex items-center gap-3">
-                        <span class="brutalist-badge bg-gray-400 text-white!">NO POST TODAY</span>
-                        <span class="font-bold text-sm italic opacity-60">今天還沒留下足跡呢？</span>
-                      </div>
-                      <a href="/create" class="brutalist-btn-primary !py-3 !text-sm max-w-xs text-center">立刻分享今日飲品 →</a>
-                    </div>
-                  `}
-                </div>
-              </div>
-            </div>
-          </header>
-        </div>
-      `;
-
-      // Render Avatar via Svelte
-      const avatarRoot = document.getElementById('avatar-root');
-      if (avatarRoot) {
-        import('../components/AvatarGenerator.svelte').then(module => {
-          const Avatar = module.default;
-          new Avatar({
-            target: avatarRoot,
-            props: latestPost ? {
-              drinkType: latestPost.drink_type,
-              flavors: latestPost.flavors,
-              body: latestPost.body,
-              mood: latestPost.mood,
-              size: 192,
-              isEmpty: false
-            } : {
-              size: 192,
-              isEmpty: true,
-              body: 'round'
-            }
-          });
-        });
-      }
-    }
-
-    loadProfile();
+    
+    // Auth trigger for profile page login button
+    document.getElementById('login-trigger-profile')?.addEventListener('click', async () => {
+      await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.origin + '/profile' }
+      });
+    });
   </script>
-
-  <script>
-    import { supabase } from '../lib/supabase';
+</Layout>
     document.getElementById('login-trigger')?.addEventListener('click', async () => {
       await supabase.auth.signInWithOAuth({
         provider: 'google',
