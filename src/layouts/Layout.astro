@@ -25,6 +25,55 @@ const { title = "杯口杯口 PekoPeko" } = Astro.props;
       </div>
     </nav>
 
+    <style is:global>
+      :root {
+        --color-bg: #EAE5D9;
+        --color-text: #1A1A1A;
+        --color-accent: #FFD43B;
+        --color-border: #1A1A1A;
+        --color-coffee: #6F4E37;
+        --color-tea: #4A5D23;
+        --brutalist-shadow: 8px 8px 0px 0px #1A1A1A;
+        --brutalist-shadow-sm: 4px 4px 0px 0px #1A1A1A;
+      }
+    </style>
+
+    <script>
+      // 動態更新本地時區時間
+      function formatLocalTimes() {
+        const elements = document.querySelectorAll('[data-time]');
+        elements.forEach(el => {
+          const time = el.getAttribute('data-time');
+          const format = el.getAttribute('data-format');
+          if (!time) return;
+
+          const date = new Date(time);
+          const lang = navigator.language || 'zh-TW';
+          
+          if (format === 'short') {
+            el.textContent = new Intl.DateTimeFormat(lang, {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false
+            }).format(date);
+          } else {
+            el.textContent = new Intl.DateTimeFormat(lang, {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false
+            }).format(date);
+          }
+        });
+      }
+
+      // 初次執行與觀測變化 (處理可能是動態載入的元件)
+      formatLocalTimes();
+      document.addEventListener('astro:after-swap', formatLocalTimes);
+    </script>
+
     <main class="flex-1">
       <slot />
     </main>
