@@ -53,11 +53,11 @@
 
 <div class="flex items-center gap-4">
   {#if user}
-    <a href="/create" class="brutalist-btn-primary scale-90 md:scale-100 italic! font-black! border-4! shadow-[6px_6px_0px_0px_var(--color-border)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[8px_8px_0px_0px_var(--color-border)] transition-all">
-      + 紀錄今日
+    <a href="/create" class="brutalist-btn-accent scale-90 md:scale-100 title-outline px-6! py-2! border-4! shadow-[4px_4px_0px_0px_var(--color-border)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_var(--color-border)] transition-all uppercase tracking-tighter text-lg!">
+      + 新增品飲
     </a>
     <div class="dropdown dropdown-end">
-      <div tabindex="0" role="button" class="border-4 border-[--color-border] bg-white p-0.5 hover:bg-[--color-accent] transition-all shadow-[4px_4px_0px_0px_var(--color-border)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none overflow-hidden group">
+      <div tabindex="0" role="button" class="border-4 border-[--color-border] bg-white p-0.5 hover:bg-[--color-accent] transition-all shadow-[2px_2px_0px_0px_var(--color-border)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none overflow-hidden group">
         <div class="w-10 h-10 flex items-center justify-center relative">
           <AvatarGenerator 
             drinkType={latestPost?.drink_type || 'coffee'}
