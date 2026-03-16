@@ -27,7 +27,9 @@
       }
 
       const text = await navigator.clipboard.readText();
-      const isMapsUrl = text.includes("google.com/maps") || text.includes("goo.gl/maps");
+      const isMapsUrl = text.includes("google.com/maps") || 
+                        text.includes("goo.gl/maps") || 
+                        text.includes("maps.app.goo.gl");
       
       if (isMapsUrl) {
         locationUrl = text;
