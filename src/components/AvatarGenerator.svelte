@@ -88,10 +88,20 @@
   }
 
   // Generate Sparkles (Sweetness) and Acidity Accents
-  $: sparkleCount =
-    sweetnessIntensity === "high" ? 8 : sweetnessIntensity === "medium" ? 4 : 0;
-  $: accentCount =
-    acidityIntensity === "high" ? 6 : acidityIntensity === "medium" ? 3 : 0;
+  // Calculate flavor-based gradient colors
+  $: liquidColors = flavors.length > 0 
+    ? flavors.slice(0, 5).map(f => {
+        const fc = flavorColors[f.toLowerCase()];
+        if (!fc) return liquidColor;
+        // Adjust flavor color based on intensity and mouthfeel
+        const fMult = intensityMap[flavorIntensity] || 1;
+        const mMult = intensityMap[mouthfeel] || 1;
+        const h = fc.h;
+        const s = fc.s * fMult;
+        const l = fc.l / (mMult > 1 ? 1.2 : (mMult < 1 ? 0.8 : 1));
+        return `hsl(${h}, ${Math.min(100, s)}%, ${Math.min(100, l)}%)`;
+      })
+    : [liquidColor];
 
   // Expression logic
   const moodExpressions: Record<string, { eyes: string; mouth: string }> = {
@@ -154,15 +164,22 @@
       <clipPath id="cupClip-{mouthfeel}">
         <path d={cupPath} />
       </clipPath>
+      
+      <!-- Dynamic Flavor Gradient -->
+      <linearGradient id="flavorGradient-{mouthfeel}-{flavors.join('-')}" x1="0%" y1="0%" x2="0%" y2="100%">
+        {#each liquidColors as color, i}
+          <stop offset="{(i / (liquidColors.length - 1 || 1)) * 100}%" stop-color={color} />
+        {/each}
+      </linearGradient>
     </defs>
 
     <!-- Liquid Area with Effects -->
     {#if !isEmpty}
       <g clip-path="url(#cupClip-{mouthfeel})">
-        <!-- 使用 path 而非 rect 填充底色，確保基礎形狀完全吻合 -->
-        <path d={cupPath} fill={liquidColor} />
+        <!-- 使用漸層色填充底色 -->
+        <path d={cupPath} fill="url(#flavorGradient-{mouthfeel}-{flavors.join('-')})" />
 
-        <!-- 裝飾元素區域 -->
+        <!-- 裝飾元素區域 (已簡化，僅保留質感粒子) -->
         <g>
           <!-- Texture/Mouthfeel Particles (Subtle dots) -->
           {#if mouthfeel !== "low"}
@@ -178,43 +195,6 @@
               {/each}
             {/key}
           {/if}
-
-          <!-- Sweetness Sparkles -->
-          {#each Array(sparkleCount) as _, i}
-            <path
-              d="M 0 -4 L 1 -1 L 4 0 L 1 1 L 0 4 L -1 1 L -4 0 L -1 -1 Z"
-              fill="white"
-              transform="translate({80 + ((i * 37) % 140)}, {100 +
-                ((i * 53) % 120)}) scale(0.8)"
-              opacity="0.6"
-            />
-          {/each}
-
-          <!-- Acidity Accents -->
-          {#each Array(accentCount) as _, i}
-            {#if acidityType === "dry"}
-              <!-- Sharp Diamond -->
-              <rect
-                x="0"
-                y="0"
-                width="4"
-                height="4"
-                fill="white"
-                transform="translate({90 + ((i * 41) % 120)}, {110 +
-                  ((i * 47) % 100)}) rotate(45)"
-                opacity="0.4"
-              />
-            {:else}
-              <!-- Soft Bubble -->
-              <circle
-                cx={90 + ((i * 41) % 120)}
-                cy={110 + ((i * 47) % 100)}
-                r="3"
-                fill="white"
-                opacity="0.3"
-              />
-            {/if}
-          {/each}
         </g>
       </g>
     {/if}
