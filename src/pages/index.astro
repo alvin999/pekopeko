@@ -63,6 +63,12 @@ const { data: posts, error } = await supabase
                     {post.location_name && <span class="text-[10px] font-black uppercase underline decoration-2 underline-offset-2 group-hover/loc:decoration-[--color-accent]">{post.location_name}</span>}
                   </a>
                 )}
+                {!post.location_url && post.location_name && (
+                  <div class="flex items-center gap-2">
+                    <span class="w-8 h-8 border-2 border-[--color-border] flex items-center justify-center">📍</span>
+                    <span class="text-[10px] font-black uppercase">{post.location_name}</span>
+                  </div>
+                )}
               </div>
               <BowButton client:load postId={post.id} initialCount={post.bow_count} />
             </div>

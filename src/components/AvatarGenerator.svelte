@@ -4,6 +4,7 @@
   export let body: 'light' | 'round' | 'heavy' = 'round';
   export let size = 300;
   export let mood: string = '😊';
+  export let isEmpty: boolean = false;
 
   // Color Mapping for Flavors (HSL based for better blending)
   // Color Mapping for Flavors (HSL based for better blending)
@@ -138,21 +139,25 @@
     </defs>
 
     <!-- Liquid Area -->
-    <g mask="url(#waveMask)">
-      <rect x="0" y="0" width="300" height="300" fill={liquidColor} />
-      
-      <!-- Top Ripple Ripple -->
-      <path d="M 0 120 Q 75 110 150 120 T 300 120 V 0 H 0 Z" fill="#DED6C1" opacity="0.3" />
-    </g>
+    {#if !isEmpty}
+      <g mask="url(#waveMask)">
+        <rect x="0" y="0" width="300" height="300" fill={liquidColor} />
+        
+        <!-- Top Ripple Ripple -->
+        <path d="M 0 120 Q 75 110 150 120 T 300 120 V 0 H 0 Z" fill="#DED6C1" opacity="0.3" />
+      </g>
+    {/if}
 
     <!-- Cup Body (Brutalist Stroke) -->
     <path d={cupPath} fill="none" stroke="#2D2D2D" stroke-width="8" stroke-linejoin="round" />
 
     <!-- Expression Layer -->
-    <g stroke="#2D2D2D" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
-      <path d={expression.eyes} />
-      <path d={expression.mouth} />
-    </g>
+    {#if !isEmpty}
+      <g stroke="#2D2D2D" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path d={expression.eyes} />
+        <path d={expression.mouth} />
+      </g>
+    {/if}
 
     <!-- Handle (If heavy body) -->
     {#if body === 'heavy'}
@@ -160,11 +165,13 @@
     {/if}
 
     <!-- Steam (Brutalist Style) -->
-    <g opacity="0.8">
-      <path d="M 120 60 Q 130 40 120 20" fill="none" stroke="#2D2D2D" stroke-width="4" stroke-dasharray="8 4" />
-      <path d="M 150 55 Q 160 35 150 15" fill="none" stroke="#2D2D2D" stroke-width="4" stroke-dasharray="8 4" />
-      <path d="M 180 60 Q 190 40 180 20" fill="none" stroke="#2D2D2D" stroke-width="4" stroke-dasharray="8 4" />
-    </g>
+    {#if !isEmpty}
+      <g opacity="0.8">
+        <path d="M 120 60 Q 130 40 120 20" fill="none" stroke="#2D2D2D" stroke-width="4" stroke-dasharray="8 4" />
+        <path d="M 150 55 Q 160 35 150 15" fill="none" stroke="#2D2D2D" stroke-width="4" stroke-dasharray="8 4" />
+        <path d="M 180 60 Q 190 40 180 20" fill="none" stroke="#2D2D2D" stroke-width="4" stroke-dasharray="8 4" />
+      </g>
+    {/if}
   </svg>
 </div>
 
