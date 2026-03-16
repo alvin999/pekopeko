@@ -209,6 +209,7 @@
       body,
       mood,
       location_url: locationUrl,
+      location_name: shopSearchName,
     });
 
     if (error) {

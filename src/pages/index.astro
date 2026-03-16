@@ -58,7 +58,10 @@ const { data: posts, error } = await supabase
               <div class="flex gap-4 items-center">
                 <span class="text-4xl filter grayscale group-hover:grayscale-0 transition-all">{post.mood}</span>
                 {post.location_url && (
-                  <a href={post.location_url} target="_blank" class="w-8 h-8 border-2 border-[--color-border] flex items-center justify-center hover:bg-[--color-accent] transition-colors">📍</a>
+                  <a href={post.location_url} target="_blank" class="flex items-center gap-2 group/loc">
+                    <span class="w-8 h-8 border-2 border-[--color-border] flex items-center justify-center hover:bg-[--color-accent] transition-colors">📍</span>
+                    {post.location_name && <span class="text-[10px] font-black uppercase underline decoration-2 underline-offset-2 group-hover/loc:decoration-[--color-accent]">{post.location_name}</span>}
+                  </a>
                 )}
               </div>
               <BowButton client:load postId={post.id} initialCount={post.bow_count} />
