@@ -53,7 +53,7 @@
 
 <div class="flex items-center gap-4">
   {#if user}
-    <a href="/create" class="brutalist-btn-accent scale-90 md:scale-100 title-outline px-6! py-2! border-4! shadow-[4px_4px_0px_0px_var(--color-border)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_var(--color-border)] transition-all uppercase tracking-tighter text-lg!">
+    <a href="/create" class="bg-white hover:bg-[--color-accent] text-[--color-text] scale-90 md:scale-100 title-outline px-6! py-2! border-4! border-[--color-border] shadow-[4px_4px_0px_0px_var(--color-border)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_var(--color-border)] transition-all uppercase tracking-tighter text-lg! flex items-center justify-center">
       + 新增品飲
     </a>
     <div class="dropdown dropdown-end">
