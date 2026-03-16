@@ -52,15 +52,14 @@ if (mapUrl && !mapUrl.includes('hl=')) {
             <div class="brutalist-badge badge-coffee text-sm! px-4! mb-4">SPECIFICATIONS</div>
             <h1 class="text-5xl font-black italic title-outline mb-4">{drinkTitle}</h1>
             <p class="font-bold opacity-60 uppercase tracking-widest text-xs border-b-2 border-[--color-border] pb-4">
-              TIMESTAMP: {(() => {
-                const d = new Date(post.created_at);
-                const Y = d.getFullYear();
-                const M = String(d.getMonth() + 1).padStart(2, '0');
-                const D = String(d.getDate()).padStart(2, '0');
-                const h = String(d.getHours()).padStart(2, '0');
-                const m = String(d.getMinutes()).padStart(2, '0');
-                return `${Y}/${M}/${D} ${h}:${m}`;
-              })()}
+              TIMESTAMP: {new Intl.DateTimeFormat(userLang, {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+              }).format(new Date(post.created_at))}
             </p>
           </div>
 
