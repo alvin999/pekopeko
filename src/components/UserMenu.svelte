@@ -55,8 +55,8 @@
   {#if user}
     <a href="/create" class="brutalist-btn-primary scale-90 md:scale-100">+ 紀錄今日</a>
     <div class="dropdown dropdown-end">
-      <div tabindex="0" role="button" class="border-4 border-[--color-border] bg-white p-0.5 hover:bg-[--color-accent] transition-all shadow-[4px_4px_0px_0px_var(--color-border)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none overflow-hidden">
-        <div class="w-10 h-10 flex items-center justify-center">
+      <div tabindex="0" role="button" class="border-4 border-[--color-border] bg-white p-0.5 hover:bg-[--color-accent] transition-all shadow-[4px_4px_0px_0px_var(--color-border)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none overflow-hidden group">
+        <div class="w-10 h-10 flex items-center justify-center relative">
           <AvatarGenerator 
             drinkType={latestPost?.drink_type || 'coffee'}
             flavors={latestPost?.flavors || []}
@@ -64,7 +64,13 @@
             mood={latestPost?.mood || '😊'}
             size={40}
             isEmpty={!latestPost}
+            noShadow={true}
           />
+          {#if !latestPost}
+            <span class="absolute inset-0 flex items-center justify-center font-black text-lg title-outline pointer-events-none group-hover:scale-110 transition-transform">
+              {user.user_metadata?.full_name?.charAt(0) || '👤'}
+            </span>
+          {/if}
         </div>
       </div>
       <ul tabindex="0" class="menu menu-sm dropdown-content mt-4 z-[1] p-2 bg-white border-4 border-[--color-border] shadow-[8px_8px_0px_0px_var(--color-border)] w-52">

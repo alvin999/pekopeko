@@ -119,6 +119,8 @@
 
   $: expression = moodExpressions[mood] || moodExpressions['😊'];
 
+  export let noShadow: boolean = false;
+
   // Cup Paths based on body
   const cupPaths = {
     light: "M 80 80 Q 150 70 220 80 L 200 240 Q 150 250 100 240 Z", // Tall & Slender
@@ -129,7 +131,7 @@
   $: cupPath = cupPaths[body];
 </script>
 
-<div class="avatar-container relative inline-block overflow-hidden" style="width: {size}px; height: {size}px; filter: drop-shadow(4px 4px 0px #2D2D2D);">
+<div class="avatar-container relative inline-block overflow-hidden" style="width: {size}px; height: {size}px; {noShadow ? '' : 'filter: drop-shadow(4px 4px 0px #2D2D2D);'}">
   <svg viewBox="0 0 300 300" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <!-- Solid Colors instead of Gradients for Brutalist -->
