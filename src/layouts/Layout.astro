@@ -36,39 +36,9 @@ const { title = "杯口杯口 PekoPeko" } = Astro.props;
 
 
     <script>
-      // 動態更新本地時區時間
-      function formatLocalTimes() {
-        const elements = document.querySelectorAll("[data-time]");
-        elements.forEach((el) => {
-          const time = el.getAttribute("data-time");
-          const format = el.getAttribute("data-format");
-          if (!time) return;
-
-          const date = new Date(time);
-          const lang = navigator.language || "zh-TW";
-
-          if (format === "short") {
-            el.textContent = new Intl.DateTimeFormat(lang, {
-              hour: "2-digit",
-              minute: "2-digit",
-              hour12: false,
-            }).format(date);
-          } else {
-            el.textContent = new Intl.DateTimeFormat(lang, {
-              year: "numeric",
-              month: "2-digit",
-              day: "2-digit",
-              hour: "2-digit",
-              minute: "2-digit",
-              hour12: false,
-            }).format(date);
-          }
-        });
-      }
-
-      // 初次執行與觀測變化 (處理可能是動態載入的元件)
-      formatLocalTimes();
-      document.addEventListener("astro:after-swap", formatLocalTimes);
+      import { initTimeFormatter } from "../lib/timeFormatter";
+      // 初始化全域時間格式化器，確保全站的時間標籤能根據用戶本地時區顯示，並處理頁面切換後的水合 (Hydration)
+      initTimeFormatter();
     </script>
 
     <main class="flex-1">
