@@ -89,19 +89,20 @@
 
   // Generate Sparkles (Sweetness) and Acidity Accents
   // Calculate flavor-based gradient colors
-  $: liquidColors = flavors.length > 0 
-    ? flavors.slice(0, 5).map(f => {
-        const fc = flavorColors[f.toLowerCase()];
-        if (!fc) return liquidColor;
-        // Adjust flavor color based on intensity and mouthfeel
-        const fMult = intensityMap[flavorIntensity] || 1;
-        const mMult = intensityMap[mouthfeel] || 1;
-        const h = fc.h;
-        const s = fc.s * fMult;
-        const l = fc.l / (mMult > 1 ? 1.2 : (mMult < 1 ? 0.8 : 1));
-        return `hsl(${h}, ${Math.min(100, s)}%, ${Math.min(100, l)}%)`;
-      })
-    : [liquidColor];
+  $: liquidColors =
+    flavors.length > 0
+      ? flavors.slice(0, 5).map((f) => {
+          const fc = flavorColors[f.toLowerCase()];
+          if (!fc) return liquidColor;
+          // Adjust flavor color based on intensity and mouthfeel
+          const fMult = intensityMap[flavorIntensity] || 1;
+          const mMult = intensityMap[mouthfeel] || 1;
+          const h = fc.h;
+          const s = fc.s * fMult;
+          const l = fc.l / (mMult > 1 ? 1.2 : mMult < 1 ? 0.8 : 1);
+          return `hsl(${h}, ${Math.min(100, s)}%, ${Math.min(100, l)}%)`;
+        })
+      : [liquidColor];
 
   // Expression logic
   const moodExpressions: Record<string, { eyes: string; mouth: string }> = {
@@ -139,7 +140,7 @@
       "M 70 90 Q 150 70 230 90 Q 240 180 210 240 Q 150 260 90 240 Q 60 180 70 90 Z",
     high: "M 60 80 L 240 80 L 230 250 L 70 250 Z",
   };
-  
+
   // 使用 reactive statement 確保路徑隨 mouthfeel 改變而更新
   $: cupPath = cupPaths[mouthfeel as keyof typeof cupPaths] || cupPaths.medium;
 
@@ -164,11 +165,20 @@
       <clipPath id="cupClip-{mouthfeel}">
         <path d={cupPath} />
       </clipPath>
-      
+
       <!-- Dynamic Flavor Gradient -->
-      <linearGradient id="flavorGradient-{mouthfeel}-{flavors.join('-')}" x1="0%" y1="0%" x2="0%" y2="100%">
+      <linearGradient
+        id="flavorGradient-{mouthfeel}-{flavors.join('-')}"
+        x1="0%"
+        y1="0%"
+        x2="0%"
+        y2="100%"
+      >
         {#each liquidColors as color, i}
-          <stop offset="{(i / (liquidColors.length - 1 || 1)) * 100}%" stop-color={color} />
+          <stop
+            offset="{(i / (liquidColors.length - 1 || 1)) * 100}%"
+            stop-color={color}
+          />
         {/each}
       </linearGradient>
     </defs>
@@ -177,7 +187,10 @@
     {#if !isEmpty}
       <g clip-path="url(#cupClip-{mouthfeel})">
         <!-- 使用漸層色填充底色 -->
-        <path d={cupPath} fill="url(#flavorGradient-{mouthfeel}-{flavors.join('-')})" />
+        <path
+          d={cupPath}
+          fill="url(#flavorGradient-{mouthfeel}-{flavors.join('-')})"
+        />
 
         <!-- 裝飾元素區域 (已簡化，僅保留質感粒子) -->
         <g>

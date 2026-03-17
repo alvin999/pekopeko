@@ -13,7 +13,6 @@ CREATE TABLE IF NOT EXISTS public.posts (
   drink_type text CHECK (drink_type IN ('coffee', 'tea')),
   flavors text[],
   mood text,
-  location_url text,
   location_name text,
   item_name text,
   -- SCA CVA 欄位

@@ -24,14 +24,7 @@ if (!post) {
 const drinkName = post.item_name || (post.drink_type === 'coffee' ? '咖啡' : '茶');
 const drinkTitle = `今日的${drinkName}`;
 
-// 偵測語言並處理地圖連結
-const acceptLang = Astro.request.headers.get('accept-language') || 'zh-TW';
-const userLang = acceptLang.split(',')[0].split(';')[0];
-let mapUrl = post.location_url;
-if (mapUrl && !mapUrl.includes('hl=')) {
-  const separator = mapUrl.includes('?') ? '&' : '?';
-  mapUrl = `${mapUrl}${separator}hl=${userLang}`;
-}
+const userLang = Astro.request.headers.get('accept-language')?.split(',')[0] || 'zh-TW';
 ---
 
 <Layout title={`${drinkTitle} | 杯口杯口`}>
@@ -92,11 +85,6 @@ if (mapUrl && !mapUrl.includes('hl=')) {
             </div>
           </div>
           
-          {mapUrl && (
-            <a href={mapUrl} target="_blank" class="brutalist-btn w-full bg-white hover:bg-[--color-accent]">
-              📍 VIEW ON MAP / GOOGLE MAPS
-            </a>
-          )}
         </div>
       </div>
     </div>

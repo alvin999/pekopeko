@@ -109,32 +109,16 @@ function getRemainingTime(expiresAt: string) {
                   <span class="text-4xl filter grayscale group-hover:grayscale-0 transition-all">
                     {post.mood}
                   </span>
-                  {post.location_url && (
-                    <a
-                      href={post.location_url}
-                      target="_blank"
-                      class="flex items-center gap-2 group/loc"
-                    >
-                      <span class="w-8 h-8 border-2 border-[--color-border] flex items-center justify-center hover:bg-accent transition-colors">
-                        📍
-                      </span>
-                      {post.location_name && (
-                        <span class="text-[10px] font-black uppercase underline decoration-2 underline-offset-2 group-hover/loc:decoration-accent">
-                          {post.location_name}
-                        </span>
-                      )}
-                    </a>
-                  )}
-                  {!post.location_url && post.location_name && (
-                    <div class="flex items-center gap-2">
-                      <span class="w-8 h-8 border-2 border-[--color-border] flex items-center justify-center">
-                        📍
-                      </span>
+                  <div class="flex items-center gap-2">
+                    <span class="w-8 h-8 border-2 border-[--color-border] flex items-center justify-center">
+                      📍
+                    </span>
+                    {post.location_name && (
                       <span class="text-[10px] font-black uppercase">
                         {post.location_name}
                       </span>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
                 <BowButton
                   client:load
