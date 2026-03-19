@@ -8,14 +8,4 @@ import PostEditor from '../components/PostEditor.svelte';
     <PostEditor client:load />
   </div>
 
-  <script>
-    import { supabase } from '../lib/supabase';
-    
-    // Simple client-side guard
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) {
-        window.location.href = '/';
-      }
-    });
-  </script>
 </Layout>

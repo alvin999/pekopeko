@@ -2,6 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { supabase } from '../lib/supabase';
   import AvatarGenerator from './AvatarGenerator.svelte';
+  import { getLocalDateString } from '../lib/dateUtils';
 
   let user: any = null;
   let latestPost: any = null;
@@ -10,11 +11,11 @@
   async function fetchUserStatus(authUser: any) {
     user = authUser;
     if (user) {
-      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const today = getLocalDateString();
       const { data } = await supabase.from('posts')
         .select('*')
         .eq('user_id', user.id)
-        .gt('created_at', twentyFourHoursAgo)
+        .eq('post_date', today)
         .order('created_at', { ascending: false })
         .limit(1);
       
@@ -61,10 +62,11 @@
 </script>
 
 <div class="flex items-center gap-4">
+  <a href="/create" class="bg-white hover:bg-[--color-accent] text-[--color-text] scale-90 md:scale-100 title-outline px-6! py-2! border-4! border-[--color-border] shadow-[6px_6px_0px_0px_var(--color-border)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[8px_8px_0px_0px_var(--color-border)] transition-all uppercase tracking-tighter text-lg! flex items-center justify-center">
+    + 新增品飲
+  </a>
+
   {#if user}
-    <a href="/create" class="bg-white hover:bg-[--color-accent] text-[--color-text] scale-90 md:scale-100 title-outline px-6! py-2! border-4! border-[--color-border] shadow-[6px_6px_0px_0px_var(--color-border)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[8px_8px_0px_0px_var(--color-border)] transition-all uppercase tracking-tighter text-lg! flex items-center justify-center">
-      + 新增品飲
-    </a>
     <div class="dropdown dropdown-end">
       <div tabindex="0" role="button" class="border-4 border-[--color-border] bg-white p-0.5 hover:bg-[--color-accent] transition-all shadow-[4px_4px_0px_0px_var(--color-border)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none overflow-hidden group">
         <div class="w-10 h-10 flex items-center justify-center relative">

@@ -3,8 +3,15 @@ import Layout from "../layouts/Layout.astro";
 import { supabase } from "../lib/supabase";
 import AvatarGenerator from "../components/AvatarGenerator.svelte";
 import BowButton from "../components/BowButton.svelte";
+import { getLocalDateString } from "../lib/dateUtils";
 
-// 查詢未過期的貼文，按 hot (bow_count) 排序
+const cookieDate = Astro.cookies.get("user_today")?.value;
+const serverToday = getLocalDateString();
+
+// 優先使用 Cookie 中的日期，若無則回退至伺服器日期
+const today = cookieDate || serverToday;
+
+// 僅查詢今日貼文，按 hot (bow_count) 排序
 const { data: posts, error } = await supabase
   .from("posts")
   .select(
@@ -14,16 +21,8 @@ const { data: posts, error } = await supabase
     item_name
   `,
   )
-  .gt("expires_at", new Date().toISOString())
+  .eq("post_date", today)
   .order("bow_count", { ascending: false });
-
-function getRemainingTime(expiresAt: string) {
-  const diff = new Date(expiresAt).getTime() - Date.now();
-  if (diff <= 0) return "EXPIRED";
-  const hours = Math.floor(diff / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  return `${hours}H ${minutes}M LEFT`;
-}
 ---
 
 <Layout title="杯口杯口 PekoPeko | 今日熱門飲品">
@@ -37,7 +36,7 @@ function getRemainingTime(expiresAt: string) {
       <p
         class="text-lg font-bold opacity-70 max-w-lg border-[--color-border] pb-2"
       >
-        24 小時內最迷人飲品瞬間。
+        今日限定，每日 0 點準時重設。
       </p>
       <p
         class="text-lg font-bold opacity-70 max-w-lg border-b-2 border-[--color-border] pb-2"
@@ -85,9 +84,6 @@ function getRemainingTime(expiresAt: string) {
                       }).format(new Date(post.created_at))}
                     </span>
                   </div>
-                  <span class="brutalist-badge badge-tea text-white! text-[10px] px-2 py-0.5">
-                    {getRemainingTime(post.expires_at)}
-                  </span>
                 </div>
               </div>
             </div>
@@ -149,5 +145,19 @@ function getRemainingTime(expiresAt: string) {
         </div>
       )
     }
+
+    <script is:inline define:vars={{ serverToday: today }}>
+      (function() {
+        const now = new Date();
+        const clientDate = now.getFullYear() + '-' + 
+                           String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                           String(now.getDate()).padStart(2, '0');
+        
+        if (serverToday !== clientDate) {
+          document.cookie = "user_today=" + clientDate + "; path=/; max-age=86400; SameSite=Lax";
+          window.location.reload();
+        }
+      })();
+    </script>
   </div>
 </Layout>

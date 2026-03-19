@@ -18,8 +18,12 @@
     "@tailwindcss/vite": "^4.2.1",
     "astro": "^6.0.4",
     "daisyui": "^5.5.19",
+    "maplibre-gl": "^5.20.2",
     "svelte": "^5.53.12",
     "tailwindcss": "^4.2.1",
     "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.0"
   }
 }

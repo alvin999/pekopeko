@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase';
 import AvatarGenerator from '../../components/AvatarGenerator.svelte';
 import BowButton from '../../components/BowButton.svelte';
 import ShareActions from '../../components/ShareActions.svelte';
+import MapView from '../../components/map/MapView.svelte';
 
 const { id } = Astro.params;
 
@@ -12,7 +13,7 @@ const { data: post, error } = await supabase
   .select(`
     *,
     profiles (username),
-    item_name
+    shops (name, latitude, longitude)
   `)
   .eq('id', id)
   .single();
@@ -77,6 +78,25 @@ const userLang = Astro.request.headers.get('accept-language')?.split(',')[0] || 
               <div class="text-5xl font-black">{post.bow_count}</div>
             </div>
           </div>
+
+          {post.shops?.latitude && post.shops?.longitude && (
+            <div class="space-y-4">
+              <div class="flex justify-between items-center">
+                <p class="font-black text-xs uppercase tracking-tighter opacity-40">Location</p>
+                {!post.shops?.is_verified && (
+                  <a href={`/claim?shop_id=${post.shop_id}`} class="text-[10px] bg-black text-white px-2 py-1 font-bold hover:bg-accent hover:text-black transition-colors">
+                    CLAIM THIS SHOP
+                  </a>
+                )}
+              </div>
+              <MapView 
+                client:load 
+                lat={post.shops.latitude} 
+                lng={post.shops.longitude} 
+                name={post.shops.name || post.location_name} 
+              />
+            </div>
+          )}
 
           <div class="pt-8 border-t-4 border-[--color-border] flex flex-col sm:flex-row gap-6">
             <BowButton client:load postId={post.id} initialCount={post.bow_count} />

@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { supabase } from '../lib/supabase';
   import AvatarGenerator from './AvatarGenerator.svelte';
+  import { getLocalDateString } from '../lib/dateUtils';
   import BowButton from './BowButton.svelte';
 
   let user: any = null;
@@ -14,14 +15,14 @@
     user = authUser;
 
     if (user) {
-      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const today = getLocalDateString();
       
       const [profileRes, postsRes] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', user.id).single(),
         supabase.from('posts')
           .select('*')
           .eq('user_id', user.id)
-          .gt('expires_at', new Date().toISOString())
+          .eq('post_date', today)
           .order('created_at', { ascending: false })
           .limit(1)
       ]);
@@ -37,15 +38,6 @@
       provider: 'google',
       options: { redirectTo: window.location.origin + '/profile' }
     });
-  }
-
-  function getRemainingTime(expiresAt: string) {
-    if (!expiresAt) return '';
-    const diff = new Date(expiresAt).getTime() - Date.now();
-    if (diff <= 0) return 'EXPIRED';
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    return `${hours}H ${minutes}M LEFT`;
   }
 </script>
 
@@ -99,9 +91,6 @@
               {#if latestPost}
                 <div class="space-y-6">
                   <div class="flex flex-wrap items-center gap-3">
-                    <span class="brutalist-badge badge-tea text-white!">
-                      {getRemainingTime(latestPost.expires_at)}
-                    </span>
                     <span class="text-xs font-bold opacity-60 italic">
                       {new Intl.DateTimeFormat('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(latestPost.created_at))} POSTED
                     </span>

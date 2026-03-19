@@ -48,15 +48,13 @@
     isLoading = true;
     isBowing = true;
 
-    const { data, error } = await supabase
-      .from("posts")
-      .update({ bow_count: count + 1 })
-      .eq("id", postId)
-      .select("bow_count")
-      .single();
+    // 改用 RPC 呼叫以確保安全性
+    const { error } = await supabase.rpc("increment_bow", {
+      post_id: postId,
+    });
 
-    if (!error && data) {
-      count = data.bow_count;
+    if (!error) {
+      count++;
     }
 
     // Minimal animation delay

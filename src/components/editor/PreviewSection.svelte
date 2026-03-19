@@ -1,7 +1,10 @@
 <script lang="ts">
   import AvatarGenerator from "../AvatarGenerator.svelte";
+  import ImageShareCompositor from "../ImageShareCompositor.svelte";
   import { viewport } from "../../lib/viewportTracker.svelte";
   import { postForm } from "../../lib/postForm.svelte";
+
+  let showCompositor = $state(false);
 
   // 選取顯示用風味（邏輯維持原樣：過濾掉有子項被選取的父項）
   // 這裡我們直接傳入處理過的 flavors 或是讓 Preview 自己處理
@@ -47,15 +50,41 @@
       mouthfeelTypes={postForm.mouthfeelTypes}
     />
     <div 
-      class="flex flex-wrap justify-center gap-3 transition-opacity"
+      class="flex flex-col items-center gap-4 transition-opacity w-full"
       style={viewport.isMobile ? `opacity: ${1 - viewport.scrollProgress * 1.5}; height: ${viewport.scrollProgress > 0.7 ? '0' : 'auto'}; overflow: hidden;` : ""}
     >
-      {#each displayFlavors as f}
-        <span class="brutalist-badge badge-white text-[10px]! px-3!">{f}</span>
-      {/each}
-      <span class="brutalist-badge badge-coffee text-[10px]! px-3! uppercase">
-        {postForm.mouthfeel} body
-      </span>
+      <div class="flex flex-wrap justify-center gap-3">
+        {#each displayFlavors as f}
+          <span class="brutalist-badge badge-white text-[10px]! px-3!">{f}</span>
+        {/each}
+        <span class="brutalist-badge badge-coffee text-[10px]! px-3! uppercase">
+          {postForm.mouthfeel} body
+        </span>
+      </div>
+
+      <button 
+        class="brutalist-btn bg-white hover:bg-accent w-full py-3 mt-4 flex items-center justify-center gap-2 group transition-all"
+        onclick={() => showCompositor = true}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="group-hover:rotate-12 transition-transform"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <span class="font-black text-xs uppercase italic">Create Share Image</span>
+      </button>
     </div>
   </div>
 </div>
+
+<ImageShareCompositor
+  isOpen={showCompositor}
+  onClose={() => showCompositor = false}
+  drinkType={postForm.drinkType}
+  flavors={postForm.flavors}
+  mood={postForm.mood}
+  mouthfeel={postForm.mouthfeel}
+  mouthfeelTypes={postForm.mouthfeelTypes}
+  flavorIntensity={postForm.flavorIntensity}
+  acidityIntensity={postForm.acidityIntensity}
+  acidityType={postForm.acidityType}
+  sweetnessIntensity={postForm.sweetnessIntensity}
+  itemName={postForm.itemName}
+  locationName={postForm.shopSearchName}
+/>
