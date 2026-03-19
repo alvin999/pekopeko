@@ -2,8 +2,35 @@
   import ImageShareCompositor from "./ImageShareCompositor.svelte";
   import { postForm } from "../lib/postForm.svelte";
 
-  let { drinkName = "PekoPeko Drink" } = $props<{ drinkName?: string }>();
-  // We don't need svgElement anymore as we use data from postForm or props
+  interface Props {
+    drinkName?: string;
+    drinkType?: "coffee" | "tea";
+    flavors?: string[];
+    mood?: string;
+    mouthfeel?: "low" | "medium" | "high";
+    mouthfeelTypes?: string[];
+    flavorIntensity?: "low" | "medium" | "high";
+    acidityIntensity?: "low" | "medium" | "high";
+    acidityType?: "dry" | "sweet";
+    sweetnessIntensity?: "low" | "medium" | "high";
+    itemName?: string;
+    locationName?: string;
+  }
+
+  let { 
+    drinkName = "PekoPeko Drink",
+    drinkType = postForm.drinkType,
+    flavors = postForm.flavors,
+    mood = postForm.mood,
+    mouthfeel = postForm.mouthfeel,
+    mouthfeelTypes = postForm.mouthfeelTypes,
+    flavorIntensity = postForm.flavorIntensity,
+    acidityIntensity = postForm.acidityIntensity,
+    acidityType = postForm.acidityType,
+    sweetnessIntensity = postForm.sweetnessIntensity,
+    itemName = postForm.itemName,
+    locationName = postForm.shopSearchName
+  }: Props = $props();
 
   let showCompositor = $state(false);
 
@@ -55,15 +82,15 @@
 <ImageShareCompositor
   isOpen={showCompositor}
   onClose={() => showCompositor = false}
-  drinkType={postForm.drinkType}
-  flavors={postForm.flavors}
-  mood={postForm.mood}
-  mouthfeel={postForm.mouthfeel}
-  mouthfeelTypes={postForm.mouthfeelTypes}
-  flavorIntensity={postForm.flavorIntensity}
-  acidityIntensity={postForm.acidityIntensity}
-  acidityType={postForm.acidityType}
-  sweetnessIntensity={postForm.sweetnessIntensity}
-  itemName={postForm.itemName}
-  locationName={postForm.shopSearchName}
+  {drinkType}
+  {flavors}
+  {mood}
+  {mouthfeel}
+  {mouthfeelTypes}
+  {flavorIntensity}
+  {acidityIntensity}
+  {acidityType}
+  {sweetnessIntensity}
+  {itemName}
+  {locationName}
 />

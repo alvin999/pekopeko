@@ -3,8 +3,14 @@
   import maplibregl from 'maplibre-gl';
   import 'maplibre-gl/dist/maplibre-gl.css';
 
+  interface Props {
+    lat: number;
+    lng: number;
+    name?: string;
+  }
+
   // Svelte 5 Props
-  let { lat, lng, name = "" } = $props();
+  let { lat, lng, name = "" }: Props = $props();
 
   let mapContainer: HTMLDivElement | undefined = $state();
   let map: maplibregl.Map | undefined;

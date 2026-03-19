@@ -101,7 +101,21 @@ const userLang = Astro.request.headers.get('accept-language')?.split(',')[0] || 
           <div class="pt-8 border-t-4 border-[--color-border] flex flex-col sm:flex-row gap-6">
             <BowButton client:load postId={post.id} initialCount={post.bow_count} />
             <div class="flex-1">
-               <ShareActions client:load drinkName={drinkTitle} />
+               <ShareActions 
+                 client:load 
+                 drinkName={drinkTitle}
+                 drinkType={post.drink_type}
+                 flavors={post.flavors}
+                 mood={post.mood}
+                 mouthfeel={post.mouthfeel}
+                 mouthfeelTypes={post.mouthfeel_types}
+                 flavorIntensity={post.flavor_intensity}
+                 acidityIntensity={post.acidity_intensity}
+                 acidityType={post.acidity_type}
+                 sweetnessIntensity={post.sweetness_intensity}
+                 itemName={post.item_name}
+                 locationName={post.shops?.name || post.location_name}
+               />
             </div>
           </div>
           
