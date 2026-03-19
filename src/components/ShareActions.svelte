@@ -56,20 +56,20 @@
 
 <div class="flex flex-col sm:flex-row gap-4 p-1">
   <button 
-    class="brutalist-btn bg-white hover:bg-[--color-accent] flex-1 gap-2 group transition-all" 
+    class="brutalist-btn bg-white hover:bg-[--color-accent] flex-1 flex items-center justify-center gap-3 group transition-all p-6! text-base!" 
     onclick={() => showCompositor = true}
   >
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:rotate-12 transition-transform"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-    <span class="font-black text-xs uppercase italic text-nowrap">Create Share Image</span>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="group-hover:rotate-12 transition-transform overflow-visible"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+    <span class="font-black uppercase italic">Create Share Image</span>
   </button>
-  <button class="brutalist-btn-primary flex-1 gap-2 group transition-all relative overflow-hidden" onclick={share}>
+  <button class="brutalist-btn-primary flex-1 flex items-center justify-center gap-3 group transition-all relative p-6! text-base!" onclick={share}>
     {#if showCopySuccess}
       <div class="absolute inset-0 bg-[--color-accent] text-[--color-text] flex items-center justify-center font-black italic animate-in fade-in zoom-in duration-200">
         LINK COPIED!
       </div>
     {/if}
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-    <span class="font-black text-xs uppercase italic text-nowrap">Share Post</span>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform overflow-visible"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    <span class="font-black uppercase italic">Share Post</span>
   </button>
 </div>
 

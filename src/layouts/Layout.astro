@@ -1,6 +1,7 @@
 ---
 import "../styles/global.css";
 import UserMenu from "../components/UserMenu.svelte";
+import DevToolbox from "../components/DevToolbox.svelte";
 const { title = "杯口杯口 PekoPeko" } = Astro.props;
 ---
 
@@ -34,7 +35,6 @@ const { title = "杯口杯口 PekoPeko" } = Astro.props;
       </div>
     </nav>
 
-
     <script>
       import { initTimeFormatter } from "../lib/timeFormatter";
       // 初始化全域時間格式化器，確保全站的時間標籤能根據用戶本地時區顯示，並處理頁面切換後的水合 (Hydration)
@@ -51,10 +51,11 @@ const { title = "杯口杯口 PekoPeko" } = Astro.props;
       <nav>
         <div class="grid grid-flow-col gap-4">
           <p class="font-bold uppercase tracking-widest text-sm">
-            © 2026 PekoPeko - 精緻飲品日誌
+            © 2026 PekoPeko
           </p>
         </div>
       </nav>
     </footer>
+    {import.meta.env.DEV && <DevToolbox client:load />}
   </body>
 </html>

@@ -7,6 +7,7 @@ export interface DrinkData {
   mouthfeel: Intensity;
   mouthfeelTypes: string[];
   flavorIntensity: Intensity;
+  mainTastes: string[];
   acidityIntensity: Intensity;
   acidityType: "dry" | "sweet";
   sweetnessIntensity: Intensity;

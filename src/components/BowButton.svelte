@@ -3,6 +3,7 @@
 
   export let postId: string;
   export let initialCount = 0;
+  export let variant: "standard" | "large" = "standard";
 
   let count = initialCount;
   let isBowing = false;
@@ -20,21 +21,20 @@
 
   function createParticles() {
     const newParticles: Particle[] = [];
-    const count = 1 + Math.floor(Math.random()); // 產生 1-2 個
+    const pCount = variant === "large" ? 3 : 1 + Math.floor(Math.random()); // 大尺寸更多粒子
 
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < pCount; i++) {
       newParticles.push({
         id: particleId++,
-        x: (Math.random() - 0.5) * 150, // 擴大水平範圍
-        y: -(Math.random() * 100 + 100), // 擴大垂直範圍 (-100px 到 -200px)
-        rotate: (Math.random() - 0.5) * 80, // 增加旋轉隨機性
-        scale: 0.8 + Math.random() * 0.4, // 0.8 到 1.2
+        x: (Math.random() - 0.5) * (variant === "large" ? 250 : 150),
+        y: -(Math.random() * 100 + (variant === "large" ? 150 : 100)),
+        rotate: (Math.random() - 0.5) * 80,
+        scale: (variant === "large" ? 1.2 : 0.8) + Math.random() * 0.4,
       });
     }
 
     particles = [...particles, ...newParticles];
 
-    // 1秒後移除這些粒子
     setTimeout(() => {
       const idsToRemove = newParticles.map((p) => p.id);
       particles = particles.filter((p) => !idsToRemove.includes(p.id));
@@ -42,13 +42,12 @@
   }
 
   async function handleBow() {
-    createParticles(); // 立即觸發視覺特效
+    createParticles();
 
     if (isLoading) return;
     isLoading = true;
     isBowing = true;
 
-    // 改用 RPC 呼叫以確保安全性
     const { error } = await supabase.rpc("increment_bow", {
       post_id: postId,
     });
@@ -57,7 +56,6 @@
       count++;
     }
 
-    // Minimal animation delay
     setTimeout(() => {
       isBowing = false;
       isLoading = false;
@@ -65,7 +63,7 @@
   }
 </script>
 
-<div class="bow-container">
+<div class="bow-container {variant === 'large' ? 'w-full' : ''}">
   {#each particles as p (p.id)}
     <span
       class="peko-particle font-black italic uppercase"
@@ -78,18 +76,35 @@
   <button
     on:click={handleBow}
     disabled={isLoading}
-    class="brutalist-btn-accent group min-w-[100px] gap-2 px-4! {isBowing
+    class="group transition-all {variant === 'large' 
+      ? 'w-full text-right p-0 border-none bg-transparent hover:scale-105 active:scale-95' 
+      : 'brutalist-btn-accent min-w-[100px] gap-2 px-4!'} {isBowing && variant === 'standard'
       ? 'translate-x-1 translate-y-1 shadow-none'
       : ''}"
   >
-    <span
-      class="text-xl inline-block transition-transform duration-300 {isBowing
-        ? 'rotate-12 translate-y-1'
-        : 'group-hover:-rotate-12'}"
-    >
-      🙇
-    </span>
-    <span class="font-black text-sm">{count}</span>
+    {#if variant === 'standard'}
+      <span
+        class="text-xl inline-block transition-transform duration-300 {isBowing
+          ? 'rotate-12 translate-y-1'
+          : 'group-hover:-rotate-12'}"
+      >
+        🙇
+      </span>
+      <span class="font-black text-sm">{count}</span>
+    {:else}
+      <div class="flex items-center justify-end gap-4">
+        <span
+          class="text-4xl sm:text-5xl inline-block transition-transform duration-300 {isBowing
+            ? 'rotate-12 translate-y-2 scale-110'
+            : 'group-hover:-rotate-12 scale-100'}"
+        >
+          🙇
+        </span>
+        <span class="font-black text-7xl sm:text-8xl italic block transition-all {isBowing ? 'scale-110 text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.5)]' : ''}">
+          {count}
+        </span>
+      </div>
+    {/if}
   </button>
 </div>
 

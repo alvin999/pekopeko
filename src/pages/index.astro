@@ -18,7 +18,9 @@ const { data: posts, error } = await supabase
     `
     *,
     profiles (username),
-    item_name
+    shops (name),
+    item_name,
+    location_name
   `,
   )
   .eq("post_date", today)
@@ -115,9 +117,9 @@ const { data: posts, error } = await supabase
                     <span class="text-2xl">
                       📍
                     </span>
-                    {post.location_name && (
+                    {(post.shops?.name || (post.shops as any)?.[0]?.name || post.location_name) && (
                       <span class="text-[10px] font-black uppercase">
-                        {post.location_name}
+                        {post.shops?.name || (post.shops as any)?.[0]?.name || post.location_name}
                       </span>
                     )}
                   </div>

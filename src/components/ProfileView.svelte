@@ -4,6 +4,7 @@
   import AvatarGenerator from './AvatarGenerator.svelte';
   import { getLocalDateString } from '../lib/dateUtils';
   import BowButton from './BowButton.svelte';
+  import ShareActions from './ShareActions.svelte';
 
   let user: any = null;
   let profile: any = null;
@@ -38,6 +39,47 @@
       provider: 'google',
       options: { redirectTo: window.location.origin + '/profile' }
     });
+  }
+
+  let isEditing = false;
+  let newUsername = '';
+  let saving = false;
+  let error = '';
+
+  function toggleEdit() {
+    isEditing = !isEditing;
+    if (isEditing) {
+      newUsername = profile?.username || user.user_metadata?.full_name || '';
+      error = '';
+    }
+  }
+
+  async function saveUsername() {
+    if (!newUsername.trim()) {
+      error = '使用者名稱不可為空';
+      return;
+    }
+    
+    saving = true;
+    error = '';
+    
+    try {
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ username: newUsername.trim() })
+        .eq('id', user.id);
+        
+      if (updateError) throw updateError;
+      
+      // 更新本地狀態
+      profile = { ...profile, username: newUsername.trim() };
+      isEditing = false;
+    } catch (err: any) {
+      console.error('Error updating username:', err);
+      error = err.message || '更新失敗，請稍後再試';
+    } finally {
+      saving = false;
+    }
   }
 </script>
 
@@ -78,9 +120,58 @@
 
         <div class="flex-1">
           <div class="brutalist-badge badge-coffee text-sm! px-4! italic mb-4">USER PROFILE</div>
-          <h1 class="text-6xl md:text-7xl font-black italic title-outline mb-4 uppercase tracking-tighter">
-            {profile?.username || user.user_metadata?.full_name || 'ANONYMOUS'}
-          </h1>
+          <div class="flex items-center gap-4 group/title mb-4">
+            {#if isEditing}
+              <div class="flex-1 flex flex-col gap-2">
+                <div class="flex items-center gap-2">
+                  <input
+                    type="text"
+                    bind:value={newUsername}
+                    placeholder="輸入新的使用者名稱..."
+                    class="flex-1 bg-white border-4 border-[--color-border] p-3 font-black text-2xl italic shadow-brutalist-sm focus:outline-none focus:ring-4 focus:ring-accent/30"
+                    disabled={saving}
+                    on:keydown={(e) => e.key === 'Enter' && saveUsername()}
+                  />
+                  <div class="flex gap-2">
+                    <button 
+                      class="bg-white border-4 border-[--color-border] p-3! font-bold shadow-brutalist-sm hover:bg-gray-100 transition-colors grid place-items-center" 
+                      on:click={saveUsername}
+                      disabled={saving}
+                      title="儲存"
+                    >
+                      {#if saving}
+                        <span class="loading loading-spinner loading-xs"></span>
+                      {:else}
+                        <span class="text-xl">✅</span>
+                      {/if}
+                    </button>
+                    <button 
+                      class="bg-white border-4 border-[--color-border] p-3! font-bold shadow-brutalist-sm hover:bg-gray-100 transition-colors" 
+                      on:click={toggleEdit}
+                      disabled={saving}
+                      title="取消"
+                    >
+                      <span class="text-xl">❌</span>
+                    </button>
+                  </div>
+                </div>
+                {#if error}
+                  <p class="text-xs font-bold text-red-500 italic">{error}</p>
+                {/if}
+              </div>
+            {:else}
+              <h1 class="text-6xl md:text-7xl font-black italic title-outline uppercase tracking-tighter">
+                {profile?.username || user.user_metadata?.full_name || 'ANONYMOUS'}
+              </h1>
+              <button 
+                on:click={toggleEdit}
+                class="opacity-0 group-hover/title:opacity-100 transition-opacity bg-white border-2 border-[--color-border] p-2 shadow-brutalist-sm hover:scale-110 active:scale-95"
+                title="修改名稱"
+              >
+                <span class="text-xl">✏️</span>
+              </button>
+            {/if}
+          </div>
           
           <div class="flex flex-col gap-4">
             <p class="font-bold opacity-60 text-lg">
@@ -98,6 +189,9 @@
 
                   <div class="bg-[#F5F2EA] p-6 border-2 border-[--color-border] space-y-4">
                     <div class="flex flex-wrap gap-2">
+                      <h3 class="text-4xl font-black italic uppercase text-[--color-accent] mb-2 w-full tracking-tighter title-outline-sm">
+                        {latestPost.item_name || "TODAY'S BREW"}
+                      </h3>
                       {#if latestPost.flavors && latestPost.flavors.length > 0}
                         {#each latestPost.flavors as f}
                           <span class="brutalist-badge badge-white text-[10px]!">{f}</span>
@@ -109,35 +203,51 @@
                     </div>
 
                     <!-- CVA Details -->
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 py-4 border-y-2 border-[--color-border] border-dashed">
-                      <div class="space-y-1">
-                        <span class="text-[9px] font-black opacity-40 uppercase block">Main Taste</span>
-                        <div class="flex flex-wrap gap-1">
-                          {#each latestPost.main_tastes || [] as t}
-                            <span class="bg-black text-white text-[9px] px-1.5 font-bold uppercase">{t}</span>
-                          {/each}
-                        </div>
-                      </div>
-                      <div class="space-y-1">
-                        <span class="text-[9px] font-black opacity-40 uppercase block">Acidity</span>
-                        <div class="flex items-center gap-2">
-                          <span class="text-[10px] font-black uppercase">{latestPost.acidity_type || '-'}</span>
-                          <span class="text-[9px] font-bold opacity-60">({latestPost.acidity_intensity || '-'})</span>
-                        </div>
-                      </div>
-                      <div class="space-y-1">
-                        <span class="text-[9px] font-black opacity-40 uppercase block">Sweetness</span>
-                        <span class="text-[10px] font-black uppercase">{latestPost.sweetness_intensity || '-'}</span>
-                      </div>
-                      <div class="space-y-1">
-                        <span class="text-[9px] font-black opacity-40 uppercase block">Mouthfeel</span>
-                        <div class="flex flex-col gap-1">
-                          <span class="text-[10px] font-black uppercase line-height-none">{latestPost.mouthfeel || '-'}</span>
-                          <div class="flex flex-wrap gap-1">
-                            {#each latestPost.mouthfeel_types || [] as t}
-                              <span class="border border-[--color-border] text-[8px] px-1 font-bold uppercase">{t}</span>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 py-6 border-y-2 border-[--color-border] border-dashed">
+                      <div class="flex flex-col justify-start gap-1">
+                        <span class="text-xs font-black opacity-40 uppercase block">Main Taste</span>
+                        <div class="flex flex-wrap gap-1.5 min-h-8">
+                          {#if latestPost.main_tastes && latestPost.main_tastes.length > 0}
+                            {#each latestPost.main_tastes as t}
+                              <span class="bg-black text-white text-[10px] px-2 py-0.5 font-bold uppercase">{t}</span>
                             {/each}
-                          </div>
+                          {:else}
+                            <span class="text-xs font-bold opacity-20 italic">NONE</span>
+                          {/if}
+                        </div>
+                      </div>
+                      <div class="flex flex-col justify-start gap-1">
+                        <span class="text-xs font-black opacity-40 uppercase block">Acidity</span>
+                        <div class="space-y-2 mt-1">
+                          <span class="text-lg font-black uppercase underline decoration-4 decoration-accent underline-offset-4 block w-fit">
+                            {latestPost.acidity_intensity || '-'}
+                          </span>
+                          {#if latestPost.acidity_type}
+                            <div class="flex flex-wrap gap-1">
+                              <span class="border-2 border-[--color-border] text-[9px] px-1.5 py-0.5 font-bold uppercase">
+                                {latestPost.acidity_type}
+                              </span>
+                            </div>
+                          {/if}
+                        </div>
+                      </div>
+                      <div class="flex flex-col justify-start gap-1">
+                        <span class="text-xs font-black opacity-40 uppercase block">Sweetness</span>
+                        <div class="min-h-8 flex items-baseline">
+                          <span class="text-lg font-black uppercase">{latestPost.sweetness_intensity || '-'}</span>
+                        </div>
+                      </div>
+                      <div class="flex flex-col justify-start gap-1">
+                        <span class="text-xs font-black opacity-40 uppercase block">Mouthfeel</span>
+                        <div class="flex flex-col gap-2 min-h-8">
+                          <span class="text-lg font-black uppercase leading-none underline decoration-2 decoration-accent underline-offset-4">{latestPost.mouthfeel || '-'}</span>
+                          {#if latestPost.mouthfeel_types && latestPost.mouthfeel_types.length > 0}
+                            <div class="flex flex-wrap gap-1">
+                              {#each latestPost.mouthfeel_types as t}
+                                <span class="border-2 border-[--color-border] text-[9px] px-1.5 py-0.5 font-bold uppercase">{t}</span>
+                              {/each}
+                            </div>
+                          {/if}
                         </div>
                       </div>
                     </div>
@@ -147,7 +257,7 @@
                         <span class="text-3xl" title="Mood">{latestPost.mood}</span>
                         {#if latestPost.location_name || latestPost.location_url}
                           <div class="flex items-center gap-2">
-                            <span class="w-7 h-7 border-2 border-[--color-border] flex items-center justify-center text-xs bg-white">📍</span>
+                            <span class="text-xl">📍</span>
                             {#if latestPost.location_url && latestPost.location_name}
                               <a href={latestPost.location_url} target="_blank" class="text-[10px] font-black uppercase underline decoration-2 underline-offset-2 hover:text-accent transition-colors">{latestPost.location_name}</a>
                             {:else if latestPost.location_name}
@@ -160,7 +270,23 @@
                           <span class="text-[10px] font-bold opacity-30 italic">NO LOCATION SHARED</span>
                         {/if}
                       </div>
-                      <BowButton postId={latestPost.id} initialCount={latestPost.bow_count} />
+                      <div class="flex items-center gap-4">
+                        <BowButton postId={latestPost.id} initialCount={latestPost.bow_count} />
+                      </div>
+                    </div>
+
+                    <div class="pt-4 border-t-2 border-[--color-border] border-dashed">
+                      <ShareActions 
+                        {...latestPost} 
+                        drinkName={latestPost.item_name}
+                        drinkType={latestPost.drink_type}
+                        flavorIntensity={latestPost.flavor_intensity}
+                        acidityIntensity={latestPost.acidity_intensity}
+                        acidityType={latestPost.acidity_type}
+                        sweetnessIntensity={latestPost.sweetness_intensity}
+                        itemName={latestPost.item_name}
+                        locationName={latestPost.location_name}
+                      />
                     </div>
                   </div>
                 </div>

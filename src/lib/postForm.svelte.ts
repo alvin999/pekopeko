@@ -62,15 +62,24 @@ export class PostForm {
       shopId: this.shopId,
       isLocationSelected: this.isLocationSelected
     };
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+    // 加入日期記錄，用於跨日檢查
+    const payload = {
+      ...data,
+      postDate: getLocalDateString()
+    };
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(payload));
   }
 
   load() {
-    if (typeof localStorage === 'undefined') return;
+    if (typeof localStorage === 'undefined') return { hasDraft: false, dateMatch: false };
     const saved = localStorage.getItem(this.STORAGE_KEY);
     if (saved) {
       try {
         const data = JSON.parse(saved);
+        const today = getLocalDateString();
+        const dateMatch = data.postDate === today;
+
+        // 如果日期不符，我們不自動載入，由呼叫端決定
         if (data.drinkType) this.drinkType = data.drinkType;
         if (data.itemName) this.itemName = data.itemName;
         if (data.flavors) this.flavors = data.flavors;
@@ -87,10 +96,33 @@ export class PostForm {
         if (data.lng) this.lng = data.lng;
         if (data.shopId) this.shopId = data.shopId;
         if (data.isLocationSelected !== undefined) this.isLocationSelected = data.isLocationSelected;
+
+        return { hasDraft: true, dateMatch };
       } catch (e) {
         console.error("Failed to load draft:", e);
       }
     }
+    return { hasDraft: false, dateMatch: false };
+  }
+
+  reset() {
+    this.drinkType = "coffee";
+    this.itemName = "";
+    this.flavors = [];
+    this.flavorIntensity = "medium";
+    this.mainTastes = [];
+    this.acidityIntensity = "medium";
+    this.acidityType = "sweet";
+    this.sweetnessIntensity = "medium";
+    this.mouthfeel = "medium";
+    this.mouthfeelTypes = [];
+    this.mood = "🙂";
+    this.shopSearchName = "";
+    this.lat = null;
+    this.lng = null;
+    this.shopId = null;
+    this.isLocationSelected = false;
+    this.errorMsg = "";
   }
 
   clear() {
