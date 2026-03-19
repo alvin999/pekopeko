@@ -1,19 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import AvatarGenerator from './AvatarGenerator.svelte';
-
-  interface Props {
-    drinkType?: "coffee" | "tea";
-    flavors?: string[];
-    mood?: string;
-    mouthfeel?: "low" | "medium" | "high";
-    mouthfeelTypes?: string[];
-    flavorIntensity?: "low" | "medium" | "high";
-    acidityIntensity?: "low" | "medium" | "high";
-    acidityType?: "dry" | "sweet";
-    sweetnessIntensity?: "low" | "medium" | "high";
-    itemName?: string;
-    locationName?: string;
+  import type { DrinkData } from '../lib/types';
+ 
+  interface Props extends Partial<DrinkData> {
     isOpen?: boolean;
     onClose?: () => void;
   }

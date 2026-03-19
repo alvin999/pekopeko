@@ -1,36 +1,30 @@
 <script lang="ts">
+  import type { DrinkData } from "../lib/types";
   import ImageShareCompositor from "./ImageShareCompositor.svelte";
   import { postForm } from "../lib/postForm.svelte";
 
-  interface Props {
+  interface Props extends Partial<DrinkData> {
     drinkName?: string;
-    drinkType?: "coffee" | "tea";
-    flavors?: string[];
-    mood?: string;
-    mouthfeel?: "low" | "medium" | "high";
-    mouthfeelTypes?: string[];
-    flavorIntensity?: "low" | "medium" | "high";
-    acidityIntensity?: "low" | "medium" | "high";
-    acidityType?: "dry" | "sweet";
-    sweetnessIntensity?: "low" | "medium" | "high";
-    itemName?: string;
-    locationName?: string;
   }
 
   let { 
     drinkName = "PekoPeko Drink",
-    drinkType = postForm.drinkType,
-    flavors = postForm.flavors,
-    mood = postForm.mood,
-    mouthfeel = postForm.mouthfeel,
-    mouthfeelTypes = postForm.mouthfeelTypes,
-    flavorIntensity = postForm.flavorIntensity,
-    acidityIntensity = postForm.acidityIntensity,
-    acidityType = postForm.acidityType,
-    sweetnessIntensity = postForm.sweetnessIntensity,
-    itemName = postForm.itemName,
-    locationName = postForm.shopSearchName
+    ...drinkProps
   }: Props = $props();
+
+  const drinkData = $derived({
+    drinkType: drinkProps.drinkType ?? postForm.drinkType,
+    flavors: drinkProps.flavors ?? postForm.flavors,
+    mood: drinkProps.mood ?? postForm.mood,
+    mouthfeel: drinkProps.mouthfeel ?? postForm.mouthfeel,
+    mouthfeelTypes: drinkProps.mouthfeelTypes ?? postForm.mouthfeelTypes,
+    flavorIntensity: drinkProps.flavorIntensity ?? postForm.flavorIntensity,
+    acidityIntensity: drinkProps.acidityIntensity ?? postForm.acidityIntensity,
+    acidityType: drinkProps.acidityType ?? postForm.acidityType,
+    sweetnessIntensity: drinkProps.sweetnessIntensity ?? postForm.sweetnessIntensity,
+    itemName: drinkProps.itemName ?? postForm.itemName,
+    locationName: drinkProps.locationName ?? postForm.shopSearchName
+  });
 
   let showCompositor = $state(false);
 
@@ -82,15 +76,5 @@
 <ImageShareCompositor
   isOpen={showCompositor}
   onClose={() => showCompositor = false}
-  {drinkType}
-  {flavors}
-  {mood}
-  {mouthfeel}
-  {mouthfeelTypes}
-  {flavorIntensity}
-  {acidityIntensity}
-  {acidityType}
-  {sweetnessIntensity}
-  {itemName}
-  {locationName}
+  {...drinkData}
 />
