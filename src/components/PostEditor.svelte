@@ -11,10 +11,13 @@
   import MoodGrid from "./editor/MoodGrid.svelte";
   import HierarchicalPicker from "./editor/HierarchicalPicker.svelte";
   import MapPicker from "./map/MapPicker.svelte";
+  import ImageShareCompositor from "./ImageShareCompositor.svelte";
   import { supabase } from "../lib/supabase";
 
   let showMap = $state(false);
   let showDraftPrompt = $state(false); // 控制是否顯示草稿提示
+  let showCompositor = $state(false);
+  let showPublishConfirm = $state(false);
   let searchSuggestions = $state<{ name: string; lat: number; lng: number; id?: string; source: string }[]>([]);
   let isSearching = $state(false);
   let searchTimeout: any;
@@ -354,7 +357,7 @@
   <div class="brutalist-card bg-white p-8 md:p-12">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
       <!-- Left: Preview -->
-      <PreviewSection {displayFlavors} />
+      <PreviewSection {displayFlavors} forceFullSize={showPublishConfirm} />
 
       <!-- Right: Form -->
       <div class="space-y-10">
@@ -537,20 +540,62 @@
           </div>
         {/if}
 
-        <button
-          class="brutalist-btn-primary w-full! py-6! text-xl {postForm.hasPostedToday
-            ? 'bg-gray-400 grayscale cursor-not-allowed border-gray-500'
-            : ''}"
-          disabled={postForm.isLoading || postForm.hasPostedToday}
-          onclick={postForm.submit}
-        >
-          {#if postForm.isLoading}
-            <span class="loading loading-spinner mr-2"></span>
-          {/if}
-          {postForm.hasPostedToday
-            ? "ALREADY PUBLISHED TODAY"
-            : "PUBLISH TODAY'S NOTE"}
-        </button>
+        {#if !postForm.hasPostedToday}
+          <div class="space-y-4 pt-4 border-t-4 border-[--color-border]/10">
+            <button 
+              class="brutalist-btn bg-white hover:bg-accent w-full py-4 flex items-center justify-center gap-2 group transition-all"
+              onclick={() => showCompositor = true}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="group-hover:rotate-12 transition-transform"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              <span class="font-black text-sm uppercase italic">Create Share Image</span>
+            </button>
+
+            {#if showPublishConfirm}
+              <div class="brutalist-card bg-accent p-6 flex flex-col items-center gap-4 animate-in fade-in zoom-in-95 border-4 border-[--color-border] shadow-brutalist">
+                <div class="text-center">
+                  <p class="font-black text-xl italic uppercase title-outline">Ready to Publish?</p>
+                  <p class="font-bold text-[10px] opacity-70 mt-1">請確認您的品飲筆記內容正確無誤。</p>
+                </div>
+                <div class="flex gap-3 w-full">
+                  <button 
+                    class="flex-1 brutalist-btn bg-black text-white py-4 font-black text-sm hover:bg-black/90 active:translate-y-1 transition-all"
+                    onclick={async () => {
+                      await postForm.submit();
+                      showPublishConfirm = false;
+                    }}
+                  >
+                    CONFIRM
+                  </button>
+                  <button 
+                    class="flex-1 brutalist-btn bg-white py-4 font-black text-sm hover:bg-bg active:translate-y-1 transition-all"
+                    onclick={() => showPublishConfirm = false}
+                  >
+                    CANCEL
+                  </button>
+                </div>
+              </div>
+            {:else}
+              <button
+                class="brutalist-btn-primary w-full! py-6! text-xl {postForm.hasPostedToday
+                  ? 'bg-gray-400 grayscale cursor-not-allowed border-gray-500'
+                  : ''}"
+                disabled={postForm.isLoading || postForm.hasPostedToday}
+                onclick={() => showPublishConfirm = true}
+              >
+                {#if postForm.isLoading}
+                  <span class="loading loading-spinner mr-2"></span>
+                {/if}
+                {postForm.hasPostedToday
+                  ? "ALREADY PUBLISHED TODAY"
+                  : "PUBLISH TODAY'S NOTE"}
+              </button>
+            {/if}
+          </div>
+        {:else}
+           <div class="brutalist-badge bg-accent w-full! py-4! text-center font-black">
+              ALREADY PUBLISHED TODAY
+           </div>
+        {/if}
 
         <!-- Reset Button -->
         {#if !postForm.hasPostedToday}
@@ -575,3 +620,19 @@
 </div>
 
 <ToastSystem />
+
+<ImageShareCompositor
+  isOpen={showCompositor}
+  onClose={() => showCompositor = false}
+  drinkType={postForm.drinkType}
+  flavors={postForm.flavors}
+  mood={postForm.mood}
+  mouthfeel={postForm.mouthfeel}
+  mouthfeelTypes={postForm.mouthfeelTypes}
+  flavorIntensity={postForm.flavorIntensity}
+  acidityIntensity={postForm.acidityIntensity}
+  acidityType={postForm.acidityType}
+  sweetnessIntensity={postForm.sweetnessIntensity}
+  itemName={postForm.itemName}
+  locationName={postForm.shopSearchName}
+/>
