@@ -24,7 +24,12 @@
       await new Promise(resolve => setTimeout(resolve, 200));
 
       try {
-        const maplibregl = (await import('maplibre-gl')).default;
+        const gl = (window as any).maplibregl;
+        if (!gl) {
+          console.error("MapLibre GL CDN 未能載入 (MapView)");
+          return;
+        }
+
         const resp = await fetch('https://tiles.openfreemap.org/styles/liberty');
         const style = await resp.json();
 
@@ -39,7 +44,7 @@
           });
         }
 
-        map = new maplibregl.Map({
+        map = new gl.Map({
           container: mapContainer!,
           style: style,
           center: [lng, lat],
@@ -52,7 +57,7 @@
             map?.resize();
           });
 
-          new maplibregl.Marker()
+          new gl.Marker()
             .setLngLat([lng, lat])
             .addTo(map);
         }

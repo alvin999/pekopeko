@@ -29,7 +29,12 @@
       await new Promise(resolve => setTimeout(resolve, 200));
 
       try {
-        const maplibregl = (await import('maplibre-gl')).default;
+        const gl = (window as any).maplibregl;
+        if (!gl) {
+          console.error("MapLibre GL CDN 未能載入");
+          return;
+        }
+
         const resp = await fetch('https://tiles.openfreemap.org/styles/liberty');
         const style = await resp.json();
 
@@ -49,7 +54,7 @@
           });
         }
 
-        map = new maplibregl.Map({
+        map = new gl.Map({
           container: mapContainer!,
           style: style,
           center: [location.lng, location.lat],
@@ -62,7 +67,7 @@
             map?.resize();
           });
 
-          marker = new maplibregl.Marker({ draggable: true })
+          marker = new gl.Marker({ draggable: true })
             .setLngLat([location.lng, location.lat])
             .addTo(map);
 
@@ -103,7 +108,7 @@
             // 如果是點狀要素，嘗試吸附到精確中心
             if (poiFeature.geometry.type === 'Point') {
               const coords = poiFeature.geometry.coordinates as [number, number];
-              finalLngLat = new maplibregl.LngLat(coords[0], coords[1]);
+              finalLngLat = new gl.LngLat(coords[0], coords[1]);
             }
           }
 

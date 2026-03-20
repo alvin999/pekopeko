@@ -18,6 +18,9 @@ const { title = "杯口杯口 PekoPeko" } = Astro.props;
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Lexend:wght@800&display=swap"
       rel="stylesheet"
     />
+    <!-- MapLibre GL CDN: 提供全球一致的地圖引擎，避免生產環境打包衝突 -->
+    <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+    <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
   </head>
   <body class="min-h-screen flex flex-col pt-24">
     <nav
