@@ -35,28 +35,9 @@
           return;
         }
 
-        const resp = await fetch('https://tiles.openfreemap.org/styles/liberty');
-        const style = await resp.json();
-
-        // 方案 A: 對 Style JSON 進行預處理
-        if (style.layers) {
-          style.layers.forEach((layer: any) => {
-            if (layer.paint) {
-              Object.keys(layer.paint).forEach(key => {
-                if (layer.paint[key] === null) layer.paint[key] = 0;
-              });
-            }
-            if (layer.layout) {
-              Object.keys(layer.layout).forEach(key => {
-                if (layer.layout[key] === null) layer.layout[key] = undefined;
-              });
-            }
-          });
-        }
-
         map = new gl.Map({
           container: mapContainer!,
-          style: style,
+          style: 'https://tiles.openfreemap.org/styles/liberty',
           center: [location.lng, location.lat],
           zoom: 15
         });

@@ -30,23 +30,9 @@
           return;
         }
 
-        const resp = await fetch('https://tiles.openfreemap.org/styles/liberty');
-        const style = await resp.json();
-
-        // 方案 A: 對 Style JSON 進行預處理
-        if (style.layers) {
-          style.layers.forEach((layer: any) => {
-            if (layer.paint) {
-              Object.keys(layer.paint).forEach(key => {
-                if (layer.paint[key] === null) layer.paint[key] = 0;
-              });
-            }
-          });
-        }
-
         map = new gl.Map({
           container: mapContainer!,
-          style: style,
+          style: 'https://tiles.openfreemap.org/styles/liberty',
           center: [lng, lat],
           zoom: 16,
           interactive: false // 靜態展示
