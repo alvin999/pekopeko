@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  // 移除靜態匯入，改為在 onMount 內動態載入
-  // import maplibregl from 'maplibre-gl';
+  // 僅使用型別，實體由 Layout.astro 的 CDN 載入
+  import type maplibregl from 'maplibre-gl';
   import 'maplibre-gl/dist/maplibre-gl.css';
 
   interface Props {
@@ -14,7 +14,7 @@
   let { lat, lng, name = "" }: Props = $props();
 
   let mapContainer: HTMLDivElement | undefined = $state();
-  let map: any;
+  let map: maplibregl.Map | undefined;
 
   onMount(() => {
     if (!lat || !lng || !mapContainer) return;
