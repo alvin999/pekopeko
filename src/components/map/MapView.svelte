@@ -18,17 +18,46 @@
   onMount(() => {
     if (!lat || !lng || !mapContainer) return;
 
-    map = new maplibregl.Map({
-      container: mapContainer,
-      style: 'https://tiles.openfreemap.org/styles/liberty',
-      center: [lng, lat],
-      zoom: 16,
-      interactive: false // 靜態展示
-    });
+    const initMap = async () => {
+      // 延遲 200ms
+      await new Promise(resolve => setTimeout(resolve, 200));
 
-    new maplibregl.Marker()
-      .setLngLat([lng, lat])
-      .addTo(map);
+      try {
+        const resp = await fetch('https://tiles.openfreemap.org/styles/liberty');
+        const style = await resp.json();
+
+        // 方案 A: 對 Style JSON 進行預處理
+        if (style.layers) {
+          style.layers.forEach((layer: any) => {
+            if (layer.paint) {
+              Object.keys(layer.paint).forEach(key => {
+                if (layer.paint[key] === null) layer.paint[key] = 0;
+              });
+            }
+          });
+        }
+
+        map = new maplibregl.Map({
+          container: mapContainer!,
+          style: style,
+          center: [lng, lat],
+          zoom: 16,
+          interactive: false // 靜態展示
+        });
+
+        map.on('load', () => {
+          map?.resize();
+        });
+
+        new maplibregl.Marker()
+          .setLngLat([lng, lat])
+          .addTo(map);
+      } catch (err) {
+        console.error("地圖視圖初始化失敗 (方案 A):", err);
+      }
+    };
+
+    initMap();
 
     return () => {
       if (map) map.remove();

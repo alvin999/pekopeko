@@ -10,41 +10,39 @@
   // 這裡我們直接傳入處理過的 flavors 或是讓 Preview 自己處理
   let { displayFlavors, forceFullSize = false } = $props<{ displayFlavors: string[], forceFullSize?: boolean }>();
 
-  // 計算實際使用的捲動進度，如果強制展開則為 0
-  const effectiveProgress = $derived(forceFullSize ? 0 : viewport.scrollProgress);
+  // 不再使用 effectiveProgress 模擬，改回 viewport.scrollProgress，
+  // 並且在 forceFullSize 時解除 sticky 與縮放效果，避免蓋到下方的表單內容。
 </script>
 
 <div 
-  class="md:sticky md:top-32 self-start space-y-8 z-40 transition-all duration-300 ease-out"
-  style={viewport.isMobile ? `
-    position: sticky; 
-    top: ${120 - effectiveProgress * 20}px; 
-    transform: scale(${1 - effectiveProgress * 0.55}) translateY(${effectiveProgress * -10}px);
+  class="self-start space-y-8 transition-all duration-300 ease-out w-full"
+  style={viewport.isMobile && !forceFullSize ? `
+    transform: scale(${1 - viewport.scrollProgress * 0.55}) translateY(${viewport.scrollProgress * -10}px);
     transform-origin: top center;
-    opacity: ${1 - effectiveProgress * 0.1};
-    margin-bottom: ${-effectiveProgress * 200}px;
-    filter: drop-shadow(0 ${10 - effectiveProgress * 10}px 20px rgba(0,0,0,0.1));
+    opacity: ${1 - viewport.scrollProgress * 0.1};
+    margin-bottom: ${-viewport.scrollProgress * 200}px;
+    filter: drop-shadow(0 ${10 - viewport.scrollProgress * 10}px 20px rgba(0,0,0,0.1));
   ` : ""}
 >
   <div 
     class="brutalist-badge badge-accent text-sm! px-4! italic md:block"
-    style={viewport.isMobile ? `opacity: ${1 - effectiveProgress * 2}; height: ${1 - effectiveProgress > 0.5 ? 'auto' : '0'}; overflow: hidden;` : ""}
+    style={viewport.isMobile && !forceFullSize ? `opacity: ${1 - viewport.scrollProgress * 2}; height: ${1 - viewport.scrollProgress > 0.5 ? 'auto' : '0'}; overflow: hidden;` : ""}
   >
     Live Preview
   </div>
   <div
-    class="bg-[#F5F2EA] p-8 md:p-12 border-6 border-[--color-border] shadow-[12px_12px_0px_0px_var(--color-border)] flex flex-col items-center gap-8 transition-all"
-    style={viewport.isMobile ? `
-      padding: ${32 - effectiveProgress * 24}px;
-      gap: ${32 - effectiveProgress * 28}px;
-      box-shadow: ${12 - effectiveProgress * 8}px ${12 - effectiveProgress * 8}px 0px 0px var(--color-border);
+    class="bg-[#F5F2EA] p-8 md:p-8 border-6 border-[--color-border] shadow-[12px_12px_0px_0px_var(--color-border)] flex flex-col items-center gap-8 transition-all"
+    style={viewport.isMobile && !forceFullSize ? `
+      padding: ${32 - viewport.scrollProgress * 24}px;
+      gap: ${32 - viewport.scrollProgress * 28}px;
+      box-shadow: ${12 - viewport.scrollProgress * 8}px ${12 - viewport.scrollProgress * 8}px 0px 0px var(--color-border);
     ` : ""}
   >
     <AvatarGenerator
       drinkType={postForm.drinkType}
       flavors={displayFlavors}
       mood={postForm.mood}
-      size={viewport.isMobile ? 300 * (1 - effectiveProgress * 0.4) : 300}
+      size={viewport.isMobile && !forceFullSize ? 300 * (1 - viewport.scrollProgress * 0.4) : 300}
       flavorIntensity={postForm.flavorIntensity}
       acidityIntensity={postForm.acidityIntensity}
       acidityType={postForm.acidityType}
@@ -54,7 +52,7 @@
     />
     <div 
       class="flex flex-col items-center gap-4 transition-opacity w-full"
-      style={viewport.isMobile ? `opacity: ${1 - effectiveProgress * 1.5}; height: ${effectiveProgress > 0.7 ? '0' : 'auto'}; overflow: hidden;` : ""}
+      style={viewport.isMobile && !forceFullSize ? `opacity: ${1 - viewport.scrollProgress * 1.5}; height: ${viewport.scrollProgress > 0.7 ? '0' : 'auto'}; overflow: hidden;` : ""}
     >
       <div class="flex flex-wrap justify-center gap-3">
         {#each displayFlavors as f}

@@ -23,58 +23,91 @@
   onMount(() => {
     if (!mapContainer) return;
 
-    map = new maplibregl.Map({
-      container: mapContainer,
-      style: 'https://tiles.openfreemap.org/styles/liberty',
-      center: [location.lng, location.lat],
-      zoom: 15
-    });
+    const initMap = async () => {
+      // 延遲 200ms 以確保 Vercel 生產環境下的容器尺寸計算穩定
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      try {
+        const resp = await fetch('https://tiles.openfreemap.org/styles/liberty');
+        const style = await resp.json();
 
-    marker = new maplibregl.Marker({ draggable: true })
-      .setLngLat([location.lng, location.lat])
-      .addTo(map);
-
-    marker.on('dragend', () => {
-      const lngLat = marker!.getLngLat();
-      handleLocationChange(lngLat.lat, lngLat.lng);
-    });
-
-    map.on('click', (e) => {
-      // 1. 先嘗試捕捉點擊處的地標 (POI)
-      const features = map!.queryRenderedFeatures(e.point, {
-        layers: undefined // 檢索所有圖層，我們會手動過濾
-      });
-
-      // 尋找具有 'name' 屬性且可能是地標的特徵
-      // 常見地標圖層關鍵字：poi, place, label, station
-      const poiFeature = features.find((f: any) => {
-        const props = f.properties || {};
-        return props.name && (
-          f.layer.id.includes('poi') || 
-          f.layer.id.includes('place') || 
-          f.layer.id.includes('label') ||
-          props.class === 'shop' ||
-          props.class === 'cafe' ||
-          props.class === 'restaurant'
-        );
-      });
-
-      let finalName: string | undefined = undefined;
-      let finalLngLat = e.lngLat;
-
-      if (poiFeature) {
-        finalName = poiFeature.properties.name;
-        // 如果是點狀要素，嘗試吸附到精確中心
-        if (poiFeature.geometry.type === 'Point') {
-          const coords = poiFeature.geometry.coordinates as [number, number];
-          finalLngLat = new maplibregl.LngLat(coords[0], coords[1]);
+        // 方案 A: 對 Style JSON 進行預處理，防止解析器因某些屬性為 null 而中斷
+        if (style.layers) {
+          style.layers.forEach((layer: any) => {
+            if (layer.paint) {
+              Object.keys(layer.paint).forEach(key => {
+                if (layer.paint[key] === null) layer.paint[key] = 0;
+              });
+            }
+            if (layer.layout) {
+              Object.keys(layer.layout).forEach(key => {
+                if (layer.layout[key] === null) layer.layout[key] = undefined;
+              });
+            }
+          });
         }
-      }
 
-      // 2. 更新標記位置
-      marker!.setLngLat(finalLngLat);
-      handleLocationChange(finalLngLat.lat, finalLngLat.lng, finalName);
-    });
+        map = new maplibregl.Map({
+          container: mapContainer!,
+          style: style,
+          center: [location.lng, location.lat],
+          zoom: 15
+        });
+
+        map.on('load', () => {
+          map?.resize();
+        });
+
+        marker = new maplibregl.Marker({ draggable: true })
+          .setLngLat([location.lng, location.lat])
+          .addTo(map);
+
+        marker.on('dragend', () => {
+          const lngLat = marker!.getLngLat();
+          handleLocationChange(lngLat.lat, lngLat.lng);
+        });
+
+        map.on('click', (e) => {
+          // 1. 先嘗試捕捉點擊處的地標 (POI)
+          const features = map!.queryRenderedFeatures(e.point, {
+            layers: undefined // 檢索所有圖層，我們會手動過濾
+          });
+
+          // 尋找具有 'name' 屬性且可能是地標的特徵
+          const poiFeature = features.find((f: any) => {
+            const props = f.properties || {};
+            return props.name && (
+              f.layer.id.includes('poi') || 
+              f.layer.id.includes('place') || 
+              f.layer.id.includes('label') ||
+              props.class === 'shop' ||
+              props.class === 'cafe' ||
+              props.class === 'restaurant'
+            );
+          });
+
+          let finalName: string | undefined = undefined;
+          let finalLngLat = e.lngLat;
+
+          if (poiFeature) {
+            finalName = poiFeature.properties.name;
+            // 如果是點狀要素，嘗試吸附到精確中心
+            if (poiFeature.geometry.type === 'Point') {
+              const coords = poiFeature.geometry.coordinates as [number, number];
+              finalLngLat = new maplibregl.LngLat(coords[0], coords[1]);
+            }
+          }
+
+          // 2. 更新標記位置
+          marker!.setLngLat(finalLngLat);
+          handleLocationChange(finalLngLat.lat, finalLngLat.lng, finalName);
+        });
+      } catch (err) {
+        console.error("地圖初始化失敗 (方案 A):", err);
+      }
+    };
+
+    initMap();
 
     return () => map?.remove();
   });

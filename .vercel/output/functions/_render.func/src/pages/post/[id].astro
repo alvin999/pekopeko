@@ -1,0 +1,251 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { supabase } from "../../lib/supabase";
+import AvatarGenerator from "../../components/AvatarGenerator.svelte";
+import BowButton from "../../components/BowButton.svelte";
+import ShareActions from "../../components/ShareActions.svelte";
+import MapView from "../../components/map/MapView.svelte";
+
+const { id } = Astro.params;
+
+const { data: post, error } = await supabase
+  .from("posts")
+  .select(
+    `
+    *,
+    profiles (username),
+    shops (name, latitude, longitude)
+  `,
+  )
+  .eq("id", id)
+  .single();
+
+if (!post) {
+  return Astro.redirect("/404");
+}
+
+const drinkName =
+  post.item_name || (post.drink_type === "coffee" ? "咖啡" : "茶");
+const drinkTitle = `${post.profiles?.username || ""}今日的${drinkName}`;
+
+const userLang =
+  Astro.request.headers.get("accept-language")?.split(",")[0] || "zh-TW";
+---
+
+<Layout title={`${drinkTitle} | 杯口杯口`}>
+  <div class="container mx-auto px-4 py-20 max-w-5xl">
+    <div class="brutalist-card bg-white p-8 md:p-12">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
+        <div
+          id="avatar-target"
+          class="flex justify-center p-12 bg-[#F5F2EA] border-6 border-[--color-border] shadow-[12px_12px_0px_0px_var(--color-border)]"
+        >
+          <AvatarGenerator
+            client:load
+            drinkType={post.drink_type}
+            flavors={post.flavors}
+            mouthfeel={post.mouthfeel}
+            mood={post.mood}
+            size={400}
+          />
+        </div>
+
+        <div class="space-y-12">
+          <div>
+            <div class="brutalist-badge badge-coffee text-sm! px-4! mb-4">
+              SPECIFICATIONS
+            </div>
+            <h1 class="text-5xl font-black italic title-outline mb-4">
+              {post.profiles?.username || ""} 今日的<br />{drinkName}
+            </h1>
+            <p
+              class="font-bold opacity-60 uppercase tracking-widest text-xs border-b-2 border-[--color-border] pb-4"
+            >
+              TIMESTAMP: <time-formatter
+                data-time={post.created_at}
+                data-format="full"
+              >
+                {
+                  new Intl.DateTimeFormat(userLang, {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: false,
+                  }).format(new Date(post.created_at))
+                }
+              </time-formatter>
+            </p>
+          </div>
+
+          <!-- Sensory Profile -->
+          <div class="space-y-8">
+            <!-- Flavors -->
+            <div class="space-y-4">
+              <p
+                class="font-black text-xs uppercase tracking-tighter opacity-40"
+              >
+                Flavor Profile
+              </p>
+              <div class="flex flex-wrap gap-3">
+                {
+                  post.flavors.map((f: string) => (
+                    <span class="brutalist-badge badge-white text-sm! px-4!">
+                      {f}
+                    </span>
+                  ))
+                }
+                <span
+                  class="brutalist-badge bg-accent text-white! text-[10px]! px-3! uppercase"
+                  >{post.flavor_intensity} Intensity</span
+                >
+              </div>
+            </div>
+
+            <!-- CVA Details Grid -->
+            <div
+              class="grid grid-cols-2 gap-8 py-6 border-y-4 border-[--color-border] border-dashed"
+            >
+              <div class="space-y-2">
+                <p
+                  class="font-black text-[10px] uppercase tracking-tighter opacity-40"
+                >
+                  Main Taste
+                </p>
+                <div class="flex flex-wrap gap-2">
+                  {
+                    post.main_tastes && post.main_tastes.length > 0 ? (
+                      post.main_tastes.map((t: string) => (
+                        <span class="bg-black text-white text-[10px] px-2 py-0.5 font-bold uppercase">
+                          {t}
+                        </span>
+                      ))
+                    ) : (
+                      <span class="text-xs font-bold opacity-30 italic">
+                        NONE
+                      </span>
+                    )
+                  }
+                </div>
+              </div>
+
+              <div class="space-y-2">
+                <p class="font-black text-[10px] uppercase tracking-tighter opacity-40">Acidity</p>
+                <div class="space-y-2">
+                  <span
+                    class="text-lg font-black uppercase underline decoration-4 decoration-accent underline-offset-4"
+                    >{post.acidity_intensity || "-"}</span
+                  >
+                  <div class="flex flex-wrap gap-1">
+                    <span class="border-2 border-[--color-border] text-[9px] px-1.5 py-0.5 font-bold uppercase">
+                      {post.acidity_type}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="space-y-2">
+                <p
+                  class="font-black text-[10px] uppercase tracking-tighter opacity-40"
+                >
+                  Sweetness
+                </p>
+                <div class="flex items-baseline gap-2">
+                  <span class="text-lg font-black uppercase"
+                    >{post.sweetness_intensity || "-"}</span
+                  >
+                </div>
+              </div>
+
+              <div class="space-y-2">
+                <p
+                  class="font-black text-[10px] uppercase tracking-tighter opacity-40"
+                >
+                  Mouthfeel
+                </p>
+                <div class="space-y-2">
+                  <span
+                    class="text-lg font-black uppercase underline decoration-4 decoration-accent underline-offset-4"
+                    >{post.mouthfeel || "-"}</span
+                  >
+                  <div class="flex flex-wrap gap-1">
+                    {
+                      post.mouthfeel_types &&
+                        post.mouthfeel_types.map((t: string) => (
+                          <span class="border-2 border-[--color-border] text-[9px] px-1.5 py-0.5 font-bold uppercase">
+                            {t}
+                          </span>
+                        ))
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="brutalist-card bg-[--color-accent] p-8 flex items-center justify-between shadow-[--brutalist-shadow-sm]">
+            <div class="text-7xl">{post.mood}</div>
+            <div class="text-right space-y-4 w-full">
+              <div class="text-xs font-black uppercase tracking-[0.2em] opacity-70">Accumulated Bows</div>
+              <div class="flex justify-end w-full">
+                <BowButton client:load postId={post.id} initialCount={post.bow_count} variant="large" />
+              </div>
+            </div>
+          </div>
+
+          {
+            ((post.shops?.latitude && post.shops?.longitude) ||
+              post.location_name) && (
+              <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                  <p class="font-black text-xs uppercase tracking-tighter opacity-40">Location</p>
+                <!-- Claiming functionality hidden for now -->
+                {/* !post.shops?.is_verified && post.shop_id && (
+                  <a href={`/claim?shop_id=${post.shop_id}`} class="text-[10px] bg-black text-white px-2 py-1 font-bold hover:bg-accent hover:text-black transition-colors">
+                    CLAIM THIS SHOP
+                  </a>
+                ) */}
+              </div>
+                {post.shops?.latitude && post.shops?.longitude ? (
+                  <MapView
+                    client:load
+                    lat={post.shops.latitude}
+                    lng={post.shops.longitude}
+                    name={post.shops.name || post.location_name}
+                  />
+                ) : (
+                  <div class="brutalist-card bg-white p-4 font-bold text-sm">
+                    📍 {post.location_name}
+                  </div>
+                )}
+              </div>
+            )
+          }
+
+          <div
+            class="pt-8 border-t-4 border-[--color-border] flex flex-col sm:flex-row gap-6"
+          >
+            <div class="flex-1">
+              <ShareActions
+                client:load
+                drinkName={drinkTitle}
+                drinkType={post.drink_type}
+                flavors={post.flavors}
+                mood={post.mood}
+                mouthfeel={post.mouthfeel}
+                mouthfeelTypes={post.mouthfeel_types}
+                flavorIntensity={post.flavor_intensity}
+                acidityIntensity={post.acidity_intensity}
+                acidityType={post.acidity_type}
+                sweetnessIntensity={post.sweetness_intensity}
+                itemName={post.item_name}
+                locationName={post.shops?.name || post.location_name}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
