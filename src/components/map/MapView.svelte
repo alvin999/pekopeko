@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import maplibregl from 'maplibre-gl';
+  // 移除靜態匯入，改為在 onMount 內動態載入
+  // import maplibregl from 'maplibre-gl';
   import 'maplibre-gl/dist/maplibre-gl.css';
 
   interface Props {
@@ -13,7 +14,7 @@
   let { lat, lng, name = "" }: Props = $props();
 
   let mapContainer: HTMLDivElement | undefined = $state();
-  let map: maplibregl.Map | undefined;
+  let map: any;
 
   onMount(() => {
     if (!lat || !lng || !mapContainer) return;
@@ -23,6 +24,7 @@
       await new Promise(resolve => setTimeout(resolve, 200));
 
       try {
+        const maplibregl = (await import('maplibre-gl')).default;
         const resp = await fetch('https://tiles.openfreemap.org/styles/liberty');
         const style = await resp.json();
 
@@ -37,10 +39,7 @@
           });
         }
 
-        // 優先使用全域 maplibregl (由 CDN 引入)
-        const gl = (window as any).maplibregl || maplibregl;
-
-        map = new gl.Map({
+        map = new maplibregl.Map({
           container: mapContainer!,
           style: style,
           center: [lng, lat],
@@ -53,7 +52,7 @@
             map?.resize();
           });
 
-          new gl.Marker()
+          new maplibregl.Marker()
             .setLngLat([lng, lat])
             .addTo(map);
         }

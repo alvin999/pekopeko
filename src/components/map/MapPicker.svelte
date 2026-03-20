@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import maplibregl from 'maplibre-gl';
+  // 移除靜態匯入，改為在 onMount 內動態載入
+  // import maplibregl from 'maplibre-gl';
   import 'maplibre-gl/dist/maplibre-gl.css';
 
   // Svelte 5 Props
@@ -16,22 +17,23 @@
   }>();
 
   let mapContainer: HTMLDivElement | undefined = $state();
-  let map: maplibregl.Map | undefined;
-  let marker: maplibregl.Marker | undefined;
+  let map: any;
+  let marker: any;
   let isLocating = $state(false);
 
   onMount(() => {
     if (!mapContainer) return;
 
     const initMap = async () => {
-      // 延遲 200ms 以確保 Vercel 生產環境下的容器尺寸計算穩定
+      // 延遲 200ms
       await new Promise(resolve => setTimeout(resolve, 200));
-      
+
       try {
+        const maplibregl = (await import('maplibre-gl')).default;
         const resp = await fetch('https://tiles.openfreemap.org/styles/liberty');
         const style = await resp.json();
 
-        // 方案 A: 對 Style JSON 進行預處理，防止解析器因某些屬性為 null 而中斷
+        // 方案 A: 對 Style JSON 進行預處理
         if (style.layers) {
           style.layers.forEach((layer: any) => {
             if (layer.paint) {
@@ -47,10 +49,7 @@
           });
         }
 
-        // 優先使用全域 maplibregl (由 CDN 引入)，可解決 Vercel 工作執行器打包問題
-        const gl = (window as any).maplibregl || maplibregl;
-
-        map = new gl.Map({
+        map = new maplibregl.Map({
           container: mapContainer!,
           style: style,
           center: [location.lng, location.lat],
@@ -63,7 +62,7 @@
             map?.resize();
           });
 
-          marker = new gl.Marker({ draggable: true })
+          marker = new maplibregl.Marker({ draggable: true })
             .setLngLat([location.lng, location.lat])
             .addTo(map);
 
@@ -76,7 +75,7 @@
             });
           }
 
-          map.on('click', (e) => {
+          map.on('click', (e: any) => {
             if (!map || !marker) return;
             // 1. 先嘗試捕捉點擊處的地標 (POI)
             const features = map.queryRenderedFeatures(e.point, {
@@ -104,7 +103,7 @@
             // 如果是點狀要素，嘗試吸附到精確中心
             if (poiFeature.geometry.type === 'Point') {
               const coords = poiFeature.geometry.coordinates as [number, number];
-              finalLngLat = new gl.LngLat(coords[0], coords[1]);
+              finalLngLat = new maplibregl.LngLat(coords[0], coords[1]);
             }
           }
 
