@@ -18,7 +18,9 @@
   let showDraftPrompt = $state(false); // 控制是否顯示草稿提示
   let showCompositor = $state(false);
   let showPublishConfirm = $state(false);
-  let searchSuggestions = $state<{ name: string; lat: number; lng: number; id?: string; source: string }[]>([]);
+  let searchSuggestions = $state<
+    { name: string; lat: number; lng: number; id?: string; source: string }[]
+  >([]);
   let isSearching = $state(false);
   let searchTimeout: any;
 
@@ -44,30 +46,30 @@
         // 注意：Nominatim 要求 User-Agent，但在瀏覽器 fetch 中通常不可設，
         // 這裡直接使用其公開 API。頻率過高可能被暫時封鎖。
         const nominatimResponse = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5`
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5`,
         );
         const globalShops = await nominatimResponse.json();
 
         // 整合結果 (優先顯示本地)
         const suggestions = [
-          ...(localShops?.map(s => ({
+          ...(localShops?.map((s) => ({
             id: s.id,
             name: s.name,
             lat: s.latitude,
             lng: s.longitude,
-            source: '本地商店'
+            source: "本地商店",
           })) || []),
           ...globalShops.map((g: any) => ({
-            name: g.display_name.split(',')[0], // 取得主要名稱
+            name: g.display_name.split(",")[0], // 取得主要名稱
             lat: parseFloat(g.lat),
             lng: parseFloat(g.lon),
-            source: '全球地標'
-          }))
+            source: "全球地標",
+          })),
         ];
 
         // 簡單去重
-        searchSuggestions = suggestions.filter((v, i, a) => 
-          a.findIndex(t => t.name === v.name) === i
+        searchSuggestions = suggestions.filter(
+          (v, i, a) => a.findIndex((t) => t.name === v.name) === i,
         );
       } catch (e) {
         console.error("搜尋地點失敗:", e);
@@ -258,7 +260,7 @@
 
   onMount(() => {
     const { hasDraft, dateMatch } = postForm.load();
-    
+
     if (hasDraft) {
       if (!dateMatch) {
         // 跨日草稿，直接清除
@@ -289,7 +291,7 @@
     postForm.mouthfeelTypes;
     postForm.mood;
     postForm.shopSearchName;
-    
+
     postForm.persist();
   });
 </script>
@@ -312,18 +314,22 @@
         <div class="flex items-center gap-3">
           <span class="text-3xl">📝</span>
           <div class="text-left">
-            <p class="text-lg font-black italic uppercase leading-none">Draft Detected.</p>
-            <p class="font-bold opacity-80 text-xs">偵測到一份未完成的草稿，要繼續嗎？</p>
+            <p class="text-lg font-black italic uppercase leading-none">
+              Draft Detected.
+            </p>
+            <p class="font-bold opacity-80 text-xs">
+              偵測到一份未完成的草稿，要繼續嗎？
+            </p>
           </div>
         </div>
         <div class="flex gap-3 w-full md:w-auto">
-          <button 
+          <button
             class="flex-1 md:flex-none brutalist-badge bg-black text-white px-6! py-2! hover:bg-accent hover:text-black transition-colors"
-            onclick={() => showDraftPrompt = false}
+            onclick={() => (showDraftPrompt = false)}
           >
             繼續編輯
           </button>
-          <button 
+          <button
             class="flex-1 md:flex-none brutalist-badge bg-white px-6! py-2! hover:bg-error hover:text-white transition-colors"
             onclick={() => {
               postForm.clear();
@@ -361,226 +367,239 @@
 
       <!-- Right: Form -->
       <div class="space-y-10">
-        <TypeToggle />
+        {#if !showPublishConfirm}
+          <TypeToggle />
 
-        <!-- Origin Selection -->
-        <section class="space-y-4">
-          <HierarchicalPicker
-            title="Select Origin / Item Name"
-            options={originData[postForm.drinkType]}
-            selectedItems={[postForm.itemName]}
-            onClick={(name) => (postForm.itemName = name)}
-          />
-          <div class="pt-2">
-            <input
-              type="text"
-              placeholder="或手動輸入全名..."
-              class="w-full bg-[#F5F2EA] border-2 border-[--color-border] px-3 py-2 text-xs font-bold focus:bg-accent outline-none"
-              bind:value={postForm.itemName}
+          <!-- Origin Selection -->
+          <section class="space-y-4">
+            <HierarchicalPicker
+              title="Select Origin / Item Name"
+              options={originData[postForm.drinkType]}
+              selectedItems={[postForm.itemName]}
+              onClick={(name) => (postForm.itemName = name)}
             />
-          </div>
-        </section>
-
-        <!-- Flavor Profile -->
-        <HierarchicalPicker
-          title="Flavor Profile"
-          options={flavorOptions}
-          selectedItems={postForm.flavors}
-          onToggle={(id, isParent, children, parent) =>
-            postForm.toggleFlavor(id, isParent, children, parent)}
-          showIntensity={true}
-          bind:intensityValue={postForm.flavorIntensity}
-        />
-
-        <!-- Main Taste -->
-        <section class="space-y-4">
-          <header class="border-b-2 border-[--color-border] pb-2">
-            <span
-              class="font-black text-xs uppercase tracking-[0.2em] opacity-50"
-              >Main Taste (Select up to two)</span
-            >
-          </header>
-          <div class="flex flex-wrap gap-3">
-            {#each mainTasteOptions as opt}
-              <button
-                type="button"
-                class="brutalist-badge text-xs! px-3! transition-all {postForm.mainTastes.includes(
-                  opt.name,
-                )
-                  ? 'badge-accent -translate-y-1 shadow-[2px_2px_0px_0px_var(--color-border)]'
-                  : 'badge-white opacity-60'}"
-                onclick={() => postForm.toggleMainTaste(opt.name)}
-              >
-                {opt.label}
-              </button>
-            {/each}
-          </div>
-        </section>
-
-        <!-- Acidity -->
-        <section class="space-y-4">
-          <IntensitySlider
-            label="Acidity"
-            bind:value={postForm.acidityIntensity}
-          />
-          <div class="flex gap-4">
-            {#each acidityOptions as opt}
-              <button
-                type="button"
-                class="flex-1 py-3 text-xs font-black border-3 border-[--color-border] whitespace-pre-line transition-all {postForm.acidityType ===
-                opt.name
-                  ? 'bg-accent -translate-y-1 shadow-brutalist-sm'
-                  : 'bg-white opacity-60 shadow-none'}"
-                onclick={() => (postForm.acidityType = opt.name as any)}
-              >
-                {opt.label}
-              </button>
-            {/each}
-          </div>
-        </section>
-
-        <!-- Sweetness -->
-        <IntensitySlider
-          label="Sweetness"
-          bind:value={postForm.sweetnessIntensity}
-        />
-
-        <!-- Mouthfeel -->
-        <section class="space-y-4">
-          <IntensitySlider label="Mouthfeel" bind:value={postForm.mouthfeel} />
-          <div class="flex flex-wrap gap-3">
-            {#each mouthfeelOptions as opt}
-              <button
-                class="brutalist-badge text-xs! px-3! transition-all {postForm.mouthfeelTypes.includes(
-                  opt.name,
-                )
-                  ? 'badge-accent -translate-y-1 shadow-[2px_2px_0px_0px_var(--color-border)]'
-                  : 'badge-white opacity-60'}"
-                onclick={() => postForm.toggleMouthfeel(opt.name)}
-              >
-                {opt.label}
-              </button>
-            {/each}
-          </div>
-        </section>
-
-        <MoodGrid />
-
-        <!-- Location -->
-        <section>
-          <div class="flex justify-between items-end mb-4">
-            <span class="font-black text-xs uppercase tracking-[0.2em] opacity-50">Discovery Location</span>
-            <button 
-              type="button"
-              class="text-[10px] font-bold underline decoration-2 underline-offset-4 hover:text-accent"
-              onclick={() => showMap = !showMap}
-            >
-              {showMap ? '[- Close Map]' : '[+ Add Map Location]'}
-            </button>
-          </div>
-          
-          <div class="bg-[#F5F2EA] border-2 border-[--color-border] p-4 space-y-4">
-            <div class="relative">
+            <div class="pt-2">
               <input
                 type="text"
-                placeholder="輸入地點名稱 (如：西門町、某某咖啡店)..."
-                class="w-full bg-white border-2 border-[--color-border] px-3 py-2 text-xs font-bold focus:bg-accent outline-none"
-                bind:value={postForm.shopSearchName}
-                oninput={(e) => handleSearch(e.currentTarget.value)}
+                placeholder="或手動輸入全名..."
+                class="w-full bg-[#F5F2EA] border-2 border-[--color-border] px-3 py-2 text-xs font-bold focus:bg-accent outline-none"
+                bind:value={postForm.itemName}
               />
-              
-              {#if isSearching || searchSuggestions.length > 0}
-                <div class="absolute z-50 left-0 right-0 top-full mt-1 bg-white border-2 border-[--color-border] shadow-[4px_4px_0_var(--color-border)] max-h-60 overflow-y-auto">
-                  {#if isSearching}
-                    <div class="p-3 text-[10px] font-bold opacity-50 italic">搜尋中...</div>
-                  {/if}
-                  
-                  {#each searchSuggestions as s}
-                    <button 
-                      type="button"
-                      class="w-full text-left p-3 border-b last:border-b-0 border-[--color-border] hover:bg-accent group transition-colors"
-                      onclick={() => selectSuggestion(s)}
-                    >
-                      <div class="flex justify-between items-start gap-2">
-                        <span class="text-xs font-black truncate">{s.name}</span>
-                        <span class="text-[9px] font-bold px-1 bg-[--color-border] text-white group-hover:bg-black uppercase shrink-0">
-                          {s.source}
-                        </span>
+            </div>
+          </section>
+
+          <!-- Flavor Profile -->
+          <HierarchicalPicker
+            title="Flavor Profile"
+            options={flavorOptions}
+            selectedItems={postForm.flavors}
+            onToggle={(id, isParent, children, parent) =>
+              postForm.toggleFlavor(id, isParent, children, parent)}
+            showIntensity={true}
+            bind:intensityValue={postForm.flavorIntensity}
+          />
+
+          <!-- Main Taste -->
+          <section class="space-y-4">
+            <header class="border-b-2 border-[--color-border] pb-2">
+              <span
+                class="font-black text-xs uppercase tracking-[0.2em] opacity-50"
+                >Main Taste (Select up to two)</span
+              >
+            </header>
+            <div class="flex flex-wrap gap-3">
+              {#each mainTasteOptions as opt}
+                <button
+                  type="button"
+                  class="brutalist-badge text-xs! px-3! transition-all {postForm.mainTastes.includes(
+                    opt.name,
+                  )
+                    ? 'badge-accent -translate-y-1 shadow-[2px_2px_0px_0px_var(--color-border)]'
+                    : 'badge-white opacity-60'}"
+                  onclick={() => postForm.toggleMainTaste(opt.name)}
+                >
+                  {opt.label}
+                </button>
+              {/each}
+            </div>
+          </section>
+
+          <!-- Acidity -->
+          <section class="space-y-4">
+            <IntensitySlider
+              label="Acidity"
+              bind:value={postForm.acidityIntensity}
+            />
+            <div class="flex gap-4">
+              {#each acidityOptions as opt}
+                <button
+                  type="button"
+                  class="flex-1 py-3 text-xs font-black border-3 border-[--color-border] whitespace-pre-line transition-all {postForm.acidityType ===
+                  opt.name
+                    ? 'bg-accent -translate-y-1 shadow-brutalist-sm'
+                    : 'bg-white opacity-60 shadow-none'}"
+                  onclick={() => (postForm.acidityType = opt.name as any)}
+                >
+                  {opt.label}
+                </button>
+              {/each}
+            </div>
+          </section>
+
+          <!-- Sweetness -->
+          <IntensitySlider
+            label="Sweetness"
+            bind:value={postForm.sweetnessIntensity}
+          />
+
+          <!-- Mouthfeel -->
+          <section class="space-y-4">
+            <IntensitySlider label="Mouthfeel" bind:value={postForm.mouthfeel} />
+            <div class="flex flex-wrap gap-3">
+              {#each mouthfeelOptions as opt}
+                <button
+                  class="brutalist-badge text-xs! px-3! transition-all {postForm.mouthfeelTypes.includes(
+                    opt.name,
+                  )
+                    ? 'badge-accent -translate-y-1 shadow-[2px_2px_0px_0px_var(--color-border)]'
+                    : 'badge-white opacity-60'}"
+                  onclick={() => postForm.toggleMouthfeel(opt.name)}
+                >
+                  {opt.label}
+                </button>
+              {/each}
+            </div>
+          </section>
+
+          <MoodGrid />
+
+          <!-- Location -->
+          <section>
+            <div class="flex justify-between items-end mb-4">
+              <span
+                class="font-black text-xs uppercase tracking-[0.2em] opacity-50"
+                >Discovery Location</span
+              >
+              <button
+                type="button"
+                class="text-[10px] font-bold underline decoration-2 underline-offset-4 hover:text-accent"
+                onclick={() => (showMap = !showMap)}
+              >
+                {showMap ? "[- Close Map]" : "[+ Add Map Location]"}
+              </button>
+            </div>
+
+            <div
+              class="bg-[#F5F2EA] border-2 border-[--color-border] p-4 space-y-4"
+            >
+              <div class="relative">
+                <input
+                  type="text"
+                  placeholder="輸入地點名稱 (如：西門町、某某咖啡店)..."
+                  class="w-full bg-white border-2 border-[--color-border] px-3 py-2 text-xs font-bold focus:bg-accent outline-none"
+                  bind:value={postForm.shopSearchName}
+                  oninput={(e) => handleSearch(e.currentTarget.value)}
+                />
+
+                {#if isSearching || searchSuggestions.length > 0}
+                  <div
+                    class="absolute z-50 left-0 right-0 top-full mt-1 bg-white border-2 border-[--color-border] shadow-[4px_4px_0_var(--color-border)] max-h-60 overflow-y-auto"
+                  >
+                    {#if isSearching}
+                      <div class="p-3 text-[10px] font-bold opacity-50 italic">
+                        搜尋中...
                       </div>
-                    </button>
-                  {/each}
+                    {/if}
+
+                    {#each searchSuggestions as s}
+                      <button
+                        type="button"
+                        class="w-full text-left p-3 border-b last:border-b-0 border-[--color-border] hover:bg-accent group transition-colors"
+                        onclick={() => selectSuggestion(s)}
+                      >
+                        <div class="flex justify-between items-start gap-2">
+                          <span class="text-xs font-black truncate"
+                            >{s.name}</span
+                          >
+                          <span
+                            class="text-[9px] font-bold px-1 bg-[--color-border] text-white group-hover:bg-black uppercase shrink-0"
+                          >
+                            {s.source}
+                          </span>
+                        </div>
+                      </button>
+                    {/each}
+                  </div>
+                {/if}
+              </div>
+
+              {#if showMap}
+                <div class="animate-in fade-in zoom-in-95 duration-200">
+                  <MapPicker
+                    location={{
+                      lat: postForm.lat || 25.0339,
+                      lng: postForm.lng || 121.5645,
+                    }}
+                    onChange={(detail) => {
+                      postForm.lat = detail.lat;
+                      postForm.lng = detail.lng;
+                      if (detail.name) {
+                        postForm.shopSearchName = detail.name;
+                        postForm.isLocationSelected = true; // 點選地圖地標
+                      }
+                    }}
+                    placeholder="拖動圖釘以標記精確位置"
+                  />
                 </div>
               {/if}
             </div>
+          </section>
 
-            {#if showMap}
-              <div class="animate-in fade-in zoom-in-95 duration-200">
-                <MapPicker 
-                  location={{ lat: postForm.lat || 25.0339, lng: postForm.lng || 121.5645 }}
-                  onChange={(detail) => {
-                    postForm.lat = detail.lat;
-                    postForm.lng = detail.lng;
-                    if (detail.name) {
-                      postForm.shopSearchName = detail.name;
-                      postForm.isLocationSelected = true; // 點選地圖地標
-                    }
-                  }}
-                  placeholder="拖動圖釘以標記精確位置"
-                />
-              </div>
-            {/if}
-          </div>
-        </section>
-
-        {#if postForm.errorMsg}
-          <div
-            class="brutalist-badge bg-error text-white w-full! py-2! text-center"
-          >
-            {postForm.errorMsg}
-          </div>
-        {/if}
-
-        {#if !postForm.hasPostedToday}
-          <div class="space-y-4 pt-4 border-t-4 border-[--color-border]/10">
-            <button 
-              class="brutalist-btn bg-white hover:bg-accent w-full py-4 flex items-center justify-center gap-2 group transition-all"
-              onclick={() => showCompositor = true}
+          {#if postForm.errorMsg}
+            <div
+              class="brutalist-badge bg-error text-white w-full! py-2! text-center"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="group-hover:rotate-12 transition-transform"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-              <span class="font-black text-sm uppercase italic">Create Share Image</span>
-            </button>
+              {postForm.errorMsg}
+            </div>
+          {/if}
 
-            {#if showPublishConfirm}
-              <div class="brutalist-card bg-accent p-6 flex flex-col items-center gap-4 animate-in fade-in zoom-in-95 border-4 border-[--color-border] shadow-brutalist">
-                <div class="text-center">
-                  <p class="font-black text-xl italic uppercase title-outline">Ready to Publish?</p>
-                  <p class="font-bold text-[10px] opacity-70 mt-1">請確認您的品飲筆記內容正確無誤。</p>
-                </div>
-                <div class="flex gap-3 w-full">
-                  <button 
-                    class="flex-1 brutalist-btn bg-black text-white py-4 font-black text-sm hover:bg-black/90 active:translate-y-1 transition-all"
-                    onclick={async () => {
-                      await postForm.submit();
-                      showPublishConfirm = false;
-                    }}
-                  >
-                    CONFIRM
-                  </button>
-                  <button 
-                    class="flex-1 brutalist-btn bg-white py-4 font-black text-sm hover:bg-bg active:translate-y-1 transition-all"
-                    onclick={() => showPublishConfirm = false}
-                  >
-                    CANCEL
-                  </button>
-                </div>
-              </div>
-            {:else}
+          {#if !postForm.hasPostedToday}
+            <div class="space-y-4 pt-4 border-t-4 border-[--color-border]/10">
+              <button
+                class="brutalist-btn bg-white hover:bg-accent w-full py-4 flex items-center justify-center gap-2 group transition-all"
+                onclick={() => (showCompositor = true)}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="group-hover:rotate-12 transition-transform"
+                  ><path
+                    d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
+                  /><circle cx="12" cy="13" r="4" /></svg
+                >
+                <span class="font-black text-sm uppercase italic"
+                  >Create Share Image</span
+                >
+              </button>
+
               <button
                 class="brutalist-btn-primary w-full! py-6! text-xl {postForm.hasPostedToday
                   ? 'bg-gray-400 grayscale cursor-not-allowed border-gray-500'
                   : ''}"
                 disabled={postForm.isLoading || postForm.hasPostedToday}
-                onclick={() => showPublishConfirm = true}
+                onclick={() => {
+                  showPublishConfirm = true;
+                  if (typeof window !== "undefined") {
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }
+                }}
               >
                 {#if postForm.isLoading}
                   <span class="loading loading-spinner mr-2"></span>
@@ -589,29 +608,62 @@
                   ? "ALREADY PUBLISHED TODAY"
                   : "PUBLISH TODAY'S NOTE"}
               </button>
-            {/if}
-          </div>
-        {:else}
-           <div class="brutalist-badge bg-accent w-full! py-4! text-center font-black">
-              ALREADY PUBLISHED TODAY
-           </div>
-        {/if}
-
-        <!-- Reset Button -->
-        {#if !postForm.hasPostedToday}
-          <div class="text-center">
-            <button 
-              type="button"
-              class="text-[10px] font-bold opacity-40 hover:opacity-100 hover:text-error transition-all uppercase tracking-widest decoration-1 underline underline-offset-4"
-              onclick={() => {
-                if (confirm("確定要清空目前所有輸入內容嗎？")) {
-                  postForm.clear();
-                  postForm.reset();
-                }
-              }}
+            </div>
+          {:else}
+            <div
+              class="brutalist-badge bg-accent w-full! py-4! text-center font-black"
             >
-              [ Reset / Clear All Fields ]
-            </button>
+              ALREADY PUBLISHED TODAY
+            </div>
+          {/if}
+
+          <!-- Reset Button -->
+          {#if !postForm.hasPostedToday}
+            <div class="text-center">
+              <button
+                type="button"
+                class="text-[10px] font-bold opacity-40 hover:opacity-100 hover:text-error transition-all uppercase tracking-widest decoration-1 underline underline-offset-4"
+                onclick={() => {
+                  if (confirm("確定要清空目前所有輸入內容嗎？")) {
+                    postForm.clear();
+                    postForm.reset();
+                  }
+                }}
+              >
+                [ Reset / Clear All Fields ]
+              </button>
+            </div>
+          {/if}
+        {:else}
+          <!-- Confirmation Block -->
+          <div
+            class="brutalist-card bg-accent p-6 flex flex-col items-center gap-4 animate-in fade-in zoom-in-95 border-4 border-[--color-border] shadow-brutalist"
+          >
+            <div class="text-center">
+              <p class="font-black text-xl italic uppercase title-outline">
+                Ready to Publish?
+              </p>
+              <p class="font-bold text-[10px] opacity-70 mt-1">
+                每日一篇限定，請確認內容正確哦！
+              </p>
+            </div>
+            <div class="flex gap-3 w-full">
+              <button
+                class="flex-1 brutalist-btn bg-black text-white py-4 font-black text-sm hover:bg-black/90 active:translate-y-1 transition-all"
+                onclick={async () => {
+                  await postForm.submit();
+                  showPublishConfirm = false;
+                }}
+              >
+                CONFIRM
+              </button>
+              <button
+                class="flex-1 brutalist-btn bg-white py-4 font-black text-sm hover:bg-bg active:translate-y-1 transition-all"
+                onclick={() => (showPublishConfirm = false)}
+              >
+                CANCEL
+              </button>
+            </div>
           </div>
         {/if}
       </div>
@@ -623,7 +675,7 @@
 
 <ImageShareCompositor
   isOpen={showCompositor}
-  onClose={() => showCompositor = false}
+  onClose={() => (showCompositor = false)}
   drinkType={postForm.drinkType}
   flavors={postForm.flavors}
   mood={postForm.mood}
