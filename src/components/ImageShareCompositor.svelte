@@ -266,10 +266,15 @@
     link.click();
   }
 
-  function resetImage() {
+  function resetAll() {
     imageX = 0;
     imageY = 0;
     imageScale = 1.0;
+    labelX = 60;
+    labelY = 850;
+    labelScale = 1.0;
+    avatarScale = 1.0;
+    // Avatar position will be auto-reset by the effect when avatarScale jumps to 1.0
     renderCanvas();
   }
 
@@ -527,12 +532,6 @@
             <label class="flex flex-col gap-2">
               <div class="flex items-center justify-between">
                 <span class="font-black text-sm uppercase">Photo Zoom</span>
-                <button 
-                  class="text-[10px] font-black bg-white border-2 border-[--color-border] px-2 py-0.5 hover:bg-error hover:text-white transition-colors"
-                  onclick={resetImage}
-                >
-                  RESET
-                </button>
               </div>
               <input 
                 type="range" 
@@ -612,6 +611,13 @@
             {/if}
         </div>
         <p class="font-black text-xs opacity-50 uppercase tracking-widest">Live Preview (可拖動 Avatar & 標籤)</p>
+        <button 
+          class="bg-white py-2 px-6 text-[10px] font-black border-2 border-[--color-border] shadow-brutalist hover:bg-error hover:text-white transition-all flex items-center gap-2 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
+          onclick={resetAll}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          RESET ALL POSITIONS
+        </button>
       </div>
     </div>
   </div>
