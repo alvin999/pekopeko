@@ -595,7 +595,7 @@
                 bind:this={canvas} 
                 width={CANVAS_SIZE} 
                 height={CANVAS_SIZE}
-                class="w-full h-full object-contain cursor-move"
+                class="w-full h-full object-contain cursor-move touch-none"
                 onmousedown={handleMouseDown}
                 onmousemove={handleMouseMove}
                 onmouseup={handleMouseUp}
