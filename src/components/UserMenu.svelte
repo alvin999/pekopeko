@@ -61,14 +61,14 @@
   }
 </script>
 
-<div class="flex items-center gap-4">
-  <a href="/create" class="bg-white hover:bg-[--color-accent] text-[--color-text] scale-90 md:scale-100 title-outline px-6! py-2! border-4! border-[--color-border] shadow-[6px_6px_0px_0px_var(--color-border)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[8px_8px_0px_0px_var(--color-border)] transition-all uppercase tracking-tighter text-lg! flex items-center justify-center">
+<div class="flex items-center gap-2 md:gap-4 flex-wrap justify-end">
+  <a href="/create" class="bg-white hover:bg-[--color-accent] text-[--color-text] scale-85 md:scale-100 title-outline px-4! md:px-6! py-2! border-4! border-[--color-border] shadow-brutalist-sm md:shadow-brutalist hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutalist md:hover:shadow-[8px_8px_0px_0px_var(--color-border)] transition-all uppercase tracking-tighter text-md! md:text-lg! flex items-center justify-center whitespace-nowrap">
     + 新增品飲
   </a>
 
   {#if user}
     <div class="dropdown dropdown-end">
-      <div tabindex="0" role="button" class="border-4 border-[--color-border] bg-white p-0.5 hover:bg-[--color-accent] transition-all shadow-[4px_4px_0px_0px_var(--color-border)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none overflow-hidden group">
+      <div tabindex="0" role="button" class="border-4 border-[--color-border] bg-white p-0.5 hover:bg-[--color-accent] transition-all shadow-brutalist-sm active:translate-x-0.5 active:translate-y-0.5 active:shadow-none overflow-hidden group">
         <div class="w-10 h-10 flex items-center justify-center relative">
           <AvatarGenerator 
             drinkType={latestPost?.drink_type || 'coffee'}
@@ -81,7 +81,7 @@
           />
         </div>
       </div>
-      <ul tabindex="0" class="menu menu-sm dropdown-content mt-4 z-[1] p-2 bg-white border-4 border-[--color-border] shadow-[8px_8px_0px_0px_var(--color-border)] w-52">
+      <ul class="menu menu-sm dropdown-content mt-4 z-1 p-2 bg-white border-4 border-[--color-border] shadow-[8px_8px_0px_0px_var(--color-border)] w-52">
         <li class="px-4 py-2 mb-2 border-b-2 border-dashed border-[--color-border] pointer-events-none">
           <span class="font-black text-[10px] uppercase opacity-40 p-0!">Account</span>
         </li>
@@ -97,7 +97,7 @@
       </ul>
     </div>
   {:else}
-    <button on:click={handleLogin} class="bg-white hover:bg-[--color-accent] text-[--color-text] scale-90 md:scale-100 title-outline px-6! py-2! border-4! border-[--color-border] shadow-[6px_6px_0px_0px_var(--color-border)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[8px_8px_0px_0px_var(--color-border)] transition-all uppercase tracking-tighter text-lg! flex items-center justify-center">
+    <button on:click={handleLogin} class="bg-white hover:bg-[--color-accent] text-[--color-text] scale-85 md:scale-100 title-outline px-4! md:px-6! py-2! border-4! border-[--color-border] shadow-brutalist-sm md:shadow-brutalist hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutalist md:hover:shadow-[8px_8px_0px_0px_var(--color-border)] transition-all uppercase tracking-tighter text-md! md:text-lg! flex items-center justify-center whitespace-nowrap">
       使用 <span class="google-text-gradient mx-1">GOOGLE</span> 登入
     </button>
   {/if}

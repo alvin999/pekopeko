@@ -179,7 +179,7 @@
             </p>
             
             <div class="mt-4 pt-6 border-t-2 border-[--color-border] border-dashed">
-              {#if latestPost}
+              {#if false && latestPost}
                 <div class="space-y-6">
                   <div class="flex flex-wrap items-center gap-3">
                     <span class="text-xs font-bold opacity-60 italic">
@@ -283,12 +283,17 @@
                   </div>
                 </div>
               {:else}
-                <div class="flex flex-col gap-4">
+                <div class="flex flex-col items-center md:items-start gap-4">
                   <div class="flex items-center gap-3">
                     <span class="brutalist-badge bg-gray-400 text-white!">NO POST TODAY</span>
                     <span class="font-bold text-sm italic opacity-60">今天還沒留下足跡呢？</span>
                   </div>
-                  <a href="/create" class="brutalist-btn-primary py-3! text-sm! max-w-xs text-center">立刻分享今日飲品 →</a>
+                  <a
+                    href="/create"
+                    class="bg-white hover:bg-[--color-accent] text-[--color-text] title-outline px-6 py-2 border-4 border-[--color-border] shadow-brutalist hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[8px_8px_0px_0px_var(--color-border)] transition-all uppercase tracking-tighter text-lg flex items-center justify-center w-fit"
+                  >
+                    立刻分享今日飲品 →
+                  </a>
                 </div>
               {/if}
             </div>
