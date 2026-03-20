@@ -48,10 +48,14 @@ const { title = "杯口杯口 PekoPeko" } = Astro.props;
     <footer
       class="footer footer-center p-10 bg-white border-t-4 border-[--color-border] text-[--color-text] mt-20"
     >
-      <nav>
+      <nav class="flex flex-col gap-6 items-center">
+        <div class="flex flex-wrap justify-center gap-8 font-black uppercase tracking-tighter text-sm italic">
+          <a href="/privacy" class="hover:underline decoration-4 decoration-[--color-accent] underline-offset-4">隱私權政策 Privacy</a>
+          <a href="/terms" class="hover:underline decoration-4 decoration-[--color-accent] underline-offset-4">服務條款 Terms</a>
+        </div>
         <div class="grid grid-flow-col gap-4">
-          <p class="font-bold uppercase tracking-widest text-sm">
-            © 2026 PekoPeko
+          <p class="font-bold uppercase tracking-widest text-sm opacity-50">
+            © 2026 杯口杯口 PekoPeko
           </p>
         </div>
       </nav>
