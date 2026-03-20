@@ -37,7 +37,10 @@
           });
         }
 
-        map = new maplibregl.Map({
+        // 優先使用全域 maplibregl (由 CDN 引入)
+        const gl = (window as any).maplibregl || maplibregl;
+
+        map = new gl.Map({
           container: mapContainer!,
           style: style,
           center: [lng, lat],
@@ -45,13 +48,15 @@
           interactive: false // 靜態展示
         });
 
-        map.on('load', () => {
-          map?.resize();
-        });
+        if (map) {
+          map.on('load', () => {
+            map?.resize();
+          });
 
-        new maplibregl.Marker()
-          .setLngLat([lng, lat])
-          .addTo(map);
+          new gl.Marker()
+            .setLngLat([lng, lat])
+            .addTo(map);
+        }
       } catch (err) {
         console.error("地圖視圖初始化失敗 (方案 A):", err);
       }

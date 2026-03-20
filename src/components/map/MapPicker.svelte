@@ -47,31 +47,41 @@
           });
         }
 
-        map = new maplibregl.Map({
+        // 優先使用全域 maplibregl (由 CDN 引入)，可解決 Vercel 工作執行器打包問題
+        const gl = (window as any).maplibregl || maplibregl;
+
+        map = new gl.Map({
           container: mapContainer!,
           style: style,
           center: [location.lng, location.lat],
           zoom: 15
         });
 
-        map.on('load', () => {
-          map?.resize();
-        });
-
-        marker = new maplibregl.Marker({ draggable: true })
-          .setLngLat([location.lng, location.lat])
-          .addTo(map);
-
-        marker.on('dragend', () => {
-          const lngLat = marker!.getLngLat();
-          handleLocationChange(lngLat.lat, lngLat.lng);
-        });
-
-        map.on('click', (e) => {
-          // 1. 先嘗試捕捉點擊處的地標 (POI)
-          const features = map!.queryRenderedFeatures(e.point, {
-            layers: undefined // 檢索所有圖層，我們會手動過濾
+        if (map) {
+          map.on('load', () => {
+            // 強制觸發一次尺寸重算，解決空白畫布問題
+            map?.resize();
           });
+
+          marker = new gl.Marker({ draggable: true })
+            .setLngLat([location.lng, location.lat])
+            .addTo(map);
+
+          if (marker) {
+            marker.on('dragend', () => {
+              if (marker) {
+                const lngLat = marker.getLngLat();
+                handleLocationChange(lngLat.lat, lngLat.lng);
+              }
+            });
+          }
+
+          map.on('click', (e) => {
+            if (!map || !marker) return;
+            // 1. 先嘗試捕捉點擊處的地標 (POI)
+            const features = map.queryRenderedFeatures(e.point, {
+              layers: undefined // 檢索所有圖層，我們會手動過濾
+            });
 
           // 尋找具有 'name' 屬性且可能是地標的特徵
           const poiFeature = features.find((f: any) => {
@@ -94,14 +104,17 @@
             // 如果是點狀要素，嘗試吸附到精確中心
             if (poiFeature.geometry.type === 'Point') {
               const coords = poiFeature.geometry.coordinates as [number, number];
-              finalLngLat = new maplibregl.LngLat(coords[0], coords[1]);
+              finalLngLat = new gl.LngLat(coords[0], coords[1]);
             }
           }
 
           // 2. 更新標記位置
-          marker!.setLngLat(finalLngLat);
-          handleLocationChange(finalLngLat.lat, finalLngLat.lng, finalName);
+          if (marker) {
+            marker.setLngLat(finalLngLat);
+            handleLocationChange(finalLngLat.lat, finalLngLat.lng, finalName);
+          }
         });
+      }
       } catch (err) {
         console.error("地圖初始化失敗 (方案 A):", err);
       }
