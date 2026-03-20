@@ -21,12 +21,12 @@ const { title = "杯口杯口 PekoPeko" } = Astro.props;
   </head>
   <body class="min-h-screen flex flex-col pt-24">
     <nav
-      class="fixed top-4 left-4 right-4 z-50 px-4 md:px-8 bg-white border-4 border-[--color-border] shadow-[--brutalist-shadow-sm] h-20 flex items-center"
+      class="fixed top-4 left-4 right-4 z-50 px-4 md:px-8 bg-white border-4 border-[--color-border] shadow-[--brutalist-shadow-sm] min-h-16 flex items-center flex-wrap gap-y-2 py-2"
     >
       <div class="flex-1">
         <a
           href="/"
-          class="text-2xl font-black tracking-tighter uppercase italic title-outline"
+          class="text-xl md:text-2xl font-black tracking-tighter uppercase italic title-outline"
           >杯口杯口 PekoPeko</a
         >
       </div>
@@ -60,6 +60,6 @@ const { title = "杯口杯口 PekoPeko" } = Astro.props;
         </div>
       </nav>
     </footer>
-    <DevToolbox client:load />
+    {import.meta.env.DEV && <DevToolbox client:load />}
   </body>
 </html>

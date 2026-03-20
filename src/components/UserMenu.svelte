@@ -62,7 +62,7 @@
 </script>
 
 <div class="flex items-center gap-2 md:gap-4 flex-wrap justify-end">
-  <a href="/create" class="bg-white hover:bg-[--color-accent] text-[--color-text] scale-85 md:scale-100 title-outline px-4! md:px-6! py-2! border-4! border-[--color-border] shadow-brutalist-sm md:shadow-brutalist hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutalist md:hover:shadow-[8px_8px_0px_0px_var(--color-border)] transition-all uppercase tracking-tighter text-md! md:text-lg! flex items-center justify-center whitespace-nowrap">
+  <a href="/create" class="bg-white hover:bg-[--color-accent] text-[--color-text] title-outline px-2! py-1! md:px-6! md:py-2! border-2! md:border-4! border-[--color-border] shadow-brutalist-sm md:shadow-brutalist hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutalist md:hover:shadow-[8px_8px_0px_0px_var(--color-border)] transition-all uppercase tracking-tighter text-xs! md:text-lg! flex items-center justify-center whitespace-nowrap">
     + 新增品飲
   </a>
 
@@ -97,7 +97,7 @@
       </ul>
     </div>
   {:else}
-    <button on:click={handleLogin} class="bg-white hover:bg-[--color-accent] text-[--color-text] scale-85 md:scale-100 title-outline px-4! md:px-6! py-2! border-4! border-[--color-border] shadow-brutalist-sm md:shadow-brutalist hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutalist md:hover:shadow-[8px_8px_0px_0px_var(--color-border)] transition-all uppercase tracking-tighter text-md! md:text-lg! flex items-center justify-center whitespace-nowrap">
+    <button on:click={handleLogin} class="bg-white hover:bg-[--color-accent] text-[--color-text] title-outline px-2! py-1! md:px-6! md:py-2! border-2! md:border-4! border-[--color-border] shadow-brutalist-sm md:shadow-brutalist hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutalist md:hover:shadow-[8px_8px_0px_0px_var(--color-border)] transition-all uppercase tracking-tighter text-xs! md:text-lg! flex items-center justify-center whitespace-nowrap">
       使用 <span class="google-text-gradient mx-1">GOOGLE</span> 登入
     </button>
   {/if}

@@ -17,7 +17,8 @@
 
   // 判斷當前使用者是否有權限使用工具箱
   const isAuthorized = $derived(
-    user && (user.email === ADMIN_EMAIL || testAccounts.some(acc => acc.email === user.email))
+    import.meta.env.DEV || // 開發環境預設顯示，方便進行測試帳號切換
+    (user && (user.email === ADMIN_EMAIL || testAccounts.some(acc => acc.email === user.email)))
   );
 
   onMount(async () => {
@@ -103,7 +104,7 @@
         <div class="flex flex-col gap-2 mt-2">
           <span class="text-[10px] font-black uppercase opacity-50 tracking-widest">Account Switcher</span>
           
-          {#if user.email !== ADMIN_EMAIL}
+          {#if !user || user.email !== ADMIN_EMAIL}
             <button 
               onclick={loginAsOwner}
               class="w-full text-left px-3 py-2 border-2 border-[--color-border] bg-blue-50 hover:bg-blue-100 transition-all font-bold text-xs"
@@ -117,7 +118,7 @@
             {#each testAccounts as acc}
               <button 
                 onclick={() => loginAs(acc.email)}
-                class="w-full text-left px-3 py-1.5 border-2 border-[--color-border] hover:bg-[--color-accent] transition-all font-bold text-xs {user.email === acc.email ? 'bg-[--color-accent]' : ''}"
+                class="w-full text-left px-3 py-1.5 border-2 border-[--color-border] hover:bg-[--color-accent] transition-all font-bold text-xs {user?.email === acc.email ? 'bg-[--color-accent]' : ''}"
               >
                 👤 {acc.label} ({acc.email.split('@')[0]})
               </button>
@@ -130,14 +131,14 @@
         </div>
 
         <div class="text-[10px] mt-2 border-t border-dashed border-[--color-border] pt-2 font-mono">
-          Current: {user?.email}
+          Current: {user?.email || 'Guest (未登入)'}
         </div>
       </div>
     {/if}
 
     <button 
       onclick={() => isOpen = !isOpen}
-      class="w-12 h-12 bg-white border-4 border-[--color-border] shadow-[4px_4px_0px_0px_var(--color-border)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_var(--color-border)] active:translate-x-0 active:translate-y-0 active:shadow-none transition-all flex items-center justify-center text-xl"
+      class="w-12 h-12 bg-white border-4 border-[--color-border] shadow-brutalist-sm hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutalist active:translate-x-0 active:translate-y-0 active:shadow-none transition-all flex items-center justify-center text-xl"
       title="Developer Tools"
     >
       🛠️
