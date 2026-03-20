@@ -266,6 +266,17 @@
     link.click();
   }
 
+  function resetAvatarPosition() {
+    const currentSize = AVATAR_SIZE * avatarScale;
+    if (mode === 'graphics') {
+        avatarX = CANVAS_SIZE - currentSize - 40;
+        avatarY = CANVAS_SIZE - currentSize - 40;
+    } else {
+        avatarX = CANVAS_SIZE - currentSize - 40;
+        avatarY = 60;
+    }
+  }
+
   function resetAll() {
     imageX = 0;
     imageY = 0;
@@ -274,7 +285,7 @@
     labelY = 850;
     labelScale = 1.0;
     avatarScale = 1.0;
-    // Avatar position will be auto-reset by the effect when avatarScale jumps to 1.0
+    resetAvatarPosition();
     renderCanvas();
   }
 
@@ -451,13 +462,7 @@
 
   // Initial position logic
   $effect(() => {
-    if (mode === 'graphics') {
-        avatarX = CANVAS_SIZE - (AVATAR_SIZE * avatarScale) - 40;
-        avatarY = CANVAS_SIZE - (AVATAR_SIZE * avatarScale) - 40;
-    } else {
-        avatarX = CANVAS_SIZE - (AVATAR_SIZE * avatarScale) - 40;
-        avatarY = 60;
-    }
+    resetAvatarPosition();
   });
 
   $effect(() => {
