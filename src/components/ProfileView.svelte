@@ -203,52 +203,44 @@
                     </div>
 
                     <!-- CVA Details -->
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 py-6 border-y-2 border-[--color-border] border-dashed">
-                      <div class="flex flex-col justify-start gap-1">
-                        <span class="text-xs font-black opacity-40 uppercase block">Main Taste</span>
-                        <div class="flex flex-wrap gap-1.5 min-h-8">
-                          {#if latestPost.main_tastes && latestPost.main_tastes.length > 0}
-                            {#each latestPost.main_tastes as t}
-                              <span class="bg-black text-white text-[10px] px-2 py-0.5 font-bold uppercase">{t}</span>
-                            {/each}
-                          {:else}
-                            <span class="text-xs font-bold opacity-20 italic">NONE</span>
-                          {/if}
-                        </div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-2 py-6 border-y-2 border-[--color-border] border-dashed items-start">
+                      <!-- 標題列 -->
+                      <span class="text-xs font-black opacity-40 uppercase">Main Taste</span>
+                      <span class="text-xs font-black opacity-40 uppercase">Acidity</span>
+                      <span class="text-xs font-black opacity-40 uppercase">Sweetness</span>
+                      <span class="text-xs font-black opacity-40 uppercase">Mouthfeel</span>
+                      <!-- 內容列 -->
+                      <div class="flex flex-wrap items-center gap-1.5 self-center">
+                        {#if latestPost.main_tastes && latestPost.main_tastes.length > 0}
+                          {#each latestPost.main_tastes as t}
+                            <span class="bg-black text-white text-[10px] px-2 py-0.5 font-bold uppercase leading-none flex items-center">{t}</span>
+                          {/each}
+                        {:else}
+                          <span class="text-xs font-bold opacity-20 italic">NONE</span>
+                        {/if}
                       </div>
-                      <div class="flex flex-col justify-start gap-1">
-                        <span class="text-xs font-black opacity-40 uppercase block">Acidity</span>
-                        <div class="space-y-2 mt-1">
-                          <span class="text-lg font-black uppercase underline decoration-4 decoration-accent underline-offset-4 block w-fit">
-                            {latestPost.acidity_intensity || '-'}
+                      <div class="flex flex-col gap-1.5 self-center">
+                        <span class="text-lg font-black uppercase underline decoration-4 decoration-accent underline-offset-4 block w-fit leading-none">
+                          {latestPost.acidity_intensity || '-'}
+                        </span>
+                        {#if latestPost.acidity_type}
+                          <span class="border-2 border-[--color-border] text-[9px] px-1.5 py-0.5 font-bold uppercase leading-none inline-flex items-center w-fit">
+                            {latestPost.acidity_type}
                           </span>
-                          {#if latestPost.acidity_type}
-                            <div class="flex flex-wrap gap-1">
-                              <span class="border-2 border-[--color-border] text-[9px] px-1.5 py-0.5 font-bold uppercase">
-                                {latestPost.acidity_type}
-                              </span>
-                            </div>
-                          {/if}
-                        </div>
+                        {/if}
                       </div>
-                      <div class="flex flex-col justify-start gap-1">
-                        <span class="text-xs font-black opacity-40 uppercase block">Sweetness</span>
-                        <div class="min-h-8 flex items-baseline">
-                          <span class="text-lg font-black uppercase">{latestPost.sweetness_intensity || '-'}</span>
-                        </div>
+                      <div class="flex items-center self-center">
+                        <span class="text-lg font-black uppercase leading-none">{latestPost.sweetness_intensity || '-'}</span>
                       </div>
-                      <div class="flex flex-col justify-start gap-1">
-                        <span class="text-xs font-black opacity-40 uppercase block">Mouthfeel</span>
-                        <div class="flex flex-col gap-2 min-h-8">
-                          <span class="text-lg font-black uppercase leading-none underline decoration-2 decoration-accent underline-offset-4">{latestPost.mouthfeel || '-'}</span>
-                          {#if latestPost.mouthfeel_types && latestPost.mouthfeel_types.length > 0}
-                            <div class="flex flex-wrap gap-1">
-                              {#each latestPost.mouthfeel_types as t}
-                                <span class="border-2 border-[--color-border] text-[9px] px-1.5 py-0.5 font-bold uppercase">{t}</span>
-                              {/each}
-                            </div>
-                          {/if}
-                        </div>
+                      <div class="flex flex-col gap-1.5 self-center">
+                        <span class="text-lg font-black uppercase leading-none underline decoration-2 decoration-accent underline-offset-4">{latestPost.mouthfeel || '-'}</span>
+                        {#if latestPost.mouthfeel_types && latestPost.mouthfeel_types.length > 0}
+                          <div class="flex flex-wrap items-center gap-1">
+                            {#each latestPost.mouthfeel_types as t}
+                              <span class="border-2 border-[--color-border] text-[9px] px-1.5 py-0.5 font-bold uppercase leading-none flex items-center">{t}</span>
+                            {/each}
+                          </div>
+                        {/if}
                       </div>
                     </div>
 

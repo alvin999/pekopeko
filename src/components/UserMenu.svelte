@@ -97,6 +97,8 @@
       </ul>
     </div>
   {:else}
-    <button on:click={handleLogin} class="brutalist-btn-primary scale-90 md:scale-100">使用 GOOGLE 登入</button>
+    <button on:click={handleLogin} class="bg-white hover:bg-[--color-accent] text-[--color-text] scale-90 md:scale-100 title-outline px-6! py-2! border-4! border-[--color-border] shadow-[6px_6px_0px_0px_var(--color-border)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[8px_8px_0px_0px_var(--color-border)] transition-all uppercase tracking-tighter text-lg! flex items-center justify-center">
+      使用 <span class="google-text-gradient mx-1">GOOGLE</span> 登入
+    </button>
   {/if}
 </div>

@@ -55,7 +55,7 @@ const { data: posts, error } = await supabase
       )
     }
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 items-start">
       {
         posts?.map((post) => (
           <div class="brutalist-card flex flex-col group">
@@ -105,11 +105,13 @@ const { data: posts, error } = await supabase
                 />
               </a>
 
-              <div class="flex flex-wrap justify-center gap-2">
-                {post.flavors.map((f: string) => (
-                  <span class="brutalist-badge badge-white">{f}</span>
-                ))}
-              </div>
+              {post.flavors?.length > 0 && (
+                <div class="flex flex-wrap justify-center gap-2">
+                  {post.flavors.map((f: string) => (
+                    <span class="brutalist-badge badge-white">{f}</span>
+                  ))}
+                </div>
+              )}
 
               <div class="flex items-center justify-between w-full mt-4 border-t-2 border-[--color-border] pt-6">
                 <div class="flex gap-4 items-center">

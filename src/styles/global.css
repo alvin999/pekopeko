@@ -105,6 +105,23 @@
   font-weight: 900;
 }
 
+.google-text-gradient {
+  background: linear-gradient(to right, #4285F4, #EA4335, #FBBC05, #34A853);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  display: inline-block;
+  font-weight: 950;
+  /* padding 防止邊緣字母（如 E）被 background-clip 裁切 */
+  padding: 0 0.12em;
+  margin: 0 -0.12em;
+  line-height: 1.2;
+  /* 使用 filter 而非 text-shadow，確保陰影為實心色不帶漸層 */
+  text-shadow: none !important;
+  filter: drop-shadow(2px 2px 0px var(--color-accent));
+}
+
 body {
   background-color: var(--color-bg) !important;
   color: var(--color-text);
