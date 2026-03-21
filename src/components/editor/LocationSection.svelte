@@ -1,9 +1,29 @@
 <script lang="ts">
+  import { onMount, onDestroy } from "svelte";
   import { postForm } from "../../lib/postForm.svelte";
   import { supabase } from "../../lib/supabase";
   import MapPicker from "../map/MapPicker.svelte";
 
   let showMap = $state(false);
+  // ... (其餘 state 不變)
+
+  const handleMapMove = (e: any) => {
+    const { lat, lng, name } = e.detail;
+    postForm.lat = lat;
+    postForm.lng = lng;
+    if (name) {
+      postForm.shopSearchName = name;
+      postForm.isLocationSelected = true;
+    }
+  };
+
+  onMount(() => {
+    window.addEventListener('pekopeko:map-move', handleMapMove);
+  });
+
+  onDestroy(() => {
+    window.removeEventListener('pekopeko:map-move', handleMapMove);
+  });
   let searchSuggestions = $state<
     { name: string; lat: number; lng: number; id?: string; source: string }[]
   >([]);
@@ -128,24 +148,14 @@
       {/if}
     </div>
 
-    {#if showMap}
-      <div class="animate-in fade-in zoom-in-95 duration-200">
-        <MapPicker
-          location={{
-            lat: postForm.lat || 25.0339,
-            lng: postForm.lng || 121.5645,
-          }}
-          onChange={(detail) => {
-            postForm.lat = detail.lat;
-            postForm.lng = detail.lng;
-            if (detail.name) {
-              postForm.shopSearchName = detail.name;
-              postForm.isLocationSelected = true; // 點選地圖地標
-            }
-          }}
-          placeholder="拖動圖釘以標記精確位置"
-        />
-      </div>
-    {/if}
+    <div class={showMap ? "animate-in fade-in zoom-in-95 duration-200" : "hidden"}>
+      <MapPicker
+        location={{
+          lat: postForm.lat || 25.0339,
+          lng: postForm.lng || 121.5645,
+        }}
+        placeholder="拖動圖釘以標記精確位置"
+      />
+    </div>
   </div>
 </section>

@@ -8,12 +8,10 @@
   interface Location { lat: number; lng: number; name?: string }
   let { 
     location = { lat: 25.0339, lng: 121.5645 }, 
-    placeholder = "點擊地圖選擇地點",
-    onChange 
+    placeholder = "點擊地圖選擇地點"
   } = $props<{
     location: Location,
-    placeholder?: string,
-    onChange?: (detail: Location) => void
+    placeholder?: string
   }>();
 
   let mapContainer: HTMLDivElement | undefined = $state();
@@ -21,13 +19,20 @@
   let marker: maplibregl.Marker | undefined;
   let isLocating = $state(false);
 
+  // 發送自定義事件到全域 (方案 A)
+  function dispatchMapMove(lat: number, lng: number, name?: string) {
+    window.dispatchEvent(new CustomEvent('pekopeko:map-move', {
+      detail: { lat, lng, name }
+    }));
+  }
+
   onMount(() => {
     const initMap = async () => {
-      // 1. 等待 Svelte DOM 更新 (處理 {#if} 延遲)
+      // 1. 等待 Svelte DOM 更新
       await tick();
       
-      // 2. 延遲 200ms 確保動畫或佈局穩定
-      await new Promise(resolve => setTimeout(resolve, 200));
+      // 2. 延遲 300ms 確保動畫或佈局穩定
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       if (map || !mapContainer) return;
 
@@ -46,14 +51,13 @@
 
         map = new gl.Map({
           container: mapContainer,
-          style: 'https://demotiles.maplibre.org/style.json', 
+          style: '/map/style.json', // 使用本機淨化過的樣式
           center: [location.lng, location.lat],
           zoom: 15
         });
 
         if (map) {
           map.on('load', () => {
-            // 強制觸發一次尺寸重算，解決空白畫布問題
             map?.resize();
           });
 
@@ -65,7 +69,7 @@
             marker.on('dragend', () => {
               if (marker) {
                 const lngLat = marker.getLngLat();
-                handleLocationChange(lngLat.lat, lngLat.lng);
+                dispatchMapMove(lngLat.lat, lngLat.lng);
               }
             });
           }
@@ -77,38 +81,38 @@
               layers: undefined // 檢索所有圖層，我們會手動過濾
             });
 
-          // 尋找具有 'name' 屬性且可能是地標的特徵
-          const poiFeature = features.find((f: any) => {
-            const props = f.properties || {};
-            return props.name && (
-              f.layer.id.includes('poi') || 
-              f.layer.id.includes('place') || 
-              f.layer.id.includes('label') ||
-              props.class === 'shop' ||
-              props.class === 'cafe' ||
-              props.class === 'restaurant'
-            );
-          });
+            // 尋找具有 'name' 屬性且可能是地標的特徵
+            const poiFeature = features.find((f: any) => {
+              const props = f.properties || {};
+              return props.name && (
+                f.layer.id.includes('poi') || 
+                f.layer.id.includes('place') || 
+                f.layer.id.includes('label') ||
+                props.class === 'shop' ||
+                props.class === 'cafe' ||
+                props.class === 'restaurant'
+              );
+            });
 
-          let finalName: string | undefined = undefined;
-          let finalLngLat = e.lngLat;
+            let finalName: string | undefined = undefined;
+            let finalLngLat = e.lngLat;
 
-          if (poiFeature) {
-            finalName = poiFeature.properties.name;
-            // 如果是點狀要素，嘗試吸附到精確中心
-            if (poiFeature.geometry.type === 'Point') {
-              const coords = poiFeature.geometry.coordinates as [number, number];
-              finalLngLat = new gl.LngLat(coords[0], coords[1]);
+            if (poiFeature) {
+              finalName = poiFeature.properties.name;
+              // 如果是點狀要素，嘗試吸附到精確中心
+              if (poiFeature.geometry.type === 'Point') {
+                const coords = poiFeature.geometry.coordinates as [number, number];
+                finalLngLat = new gl.LngLat(coords[0], coords[1]);
+              }
             }
-          }
 
-          // 2. 更新標記位置
-          if (marker) {
-            marker.setLngLat(finalLngLat);
-            handleLocationChange(finalLngLat.lat, finalLngLat.lng, finalName);
-          }
-        });
-      }
+            // 2. 更新標記位置
+            if (marker) {
+              marker.setLngLat(finalLngLat);
+              dispatchMapMove(finalLngLat.lat, finalLngLat.lng, finalName);
+            }
+          });
+        }
       } catch (err) {
         console.error("地圖初始化失敗 (方案 A):", err);
       }
@@ -119,7 +123,7 @@
     return () => map?.remove();
   });
 
-  // Svelte 5 反應式追蹤：當外部 location 改變時 (如搜尋選取)，同步更新地圖
+  // 當外部 location 改變時 (如搜尋選取)，同步更新地圖
   $effect(() => {
     if (map && marker && location) {
       const { lat, lng } = location;
@@ -131,10 +135,6 @@
       }
     }
   });
-
-  function handleLocationChange(lat: number, lng: number, name?: string) {
-    if (onChange) onChange({ lat, lng, name });
-  }
 
   function relocate() {
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
@@ -149,7 +149,7 @@
         if (map && marker) {
           map.flyTo({ center: [longitude, latitude], zoom: 16 });
           marker.setLngLat([longitude, latitude]);
-          handleLocationChange(latitude, longitude);
+          dispatchMapMove(latitude, longitude);
         }
         isLocating = false;
       },
