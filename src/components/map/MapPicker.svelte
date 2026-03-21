@@ -46,7 +46,7 @@
 
         map = new gl.Map({
           container: mapContainer,
-          style: '/map/style.json', // 使用本地已預先清洗過 (Sanitized) 的樣式檔，避免 null 導致的 Vercel 渲染錯誤
+          style: 'https://demotiles.maplibre.org/style.json', 
           center: [location.lng, location.lat],
           zoom: 15
         });
