@@ -18,17 +18,18 @@ const { title = "杯口杯口 PekoPeko" } = Astro.props;
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Lexend:wght@800&display=swap"
       rel="stylesheet"
     />
-    <!-- MapLibre GL CDN: 提供全球一致的地圖引擎，並加入 SRI 安全驗證 -->
-    <script 
-      src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" 
-      integrity="sha384-SYKAG6cglRMN0RVvhNeBY0r3FYKNOJtznwA0v7B5Vp9tr31xAHsZC0DqkQ/pZDmj" 
-      crossorigin="anonymous"></script>
+    <!-- MapLibre GL JS (CDN 採用 3.6.2 穩定版，解決 4.x 對樣式 JSON 的型別報錯問題) -->
     <link 
-      href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" 
       rel="stylesheet" 
-      integrity="sha384-MinO0mNliZ3vwppuPOUnGa+iq619pfMhLVUXfC4LHwSCvF9H+6P/KO4Q7qBOYV5V" 
-      crossorigin="anonymous" 
+      href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" 
+      integrity="sha384-p5cy4wHtKSqjnLUNjQ+8ffCwUp0vlLS+6lg1lc3qqXax2E1EmVCMCAimU+R0MOZH"
+      crossorigin="anonymous"
     />
+    <script 
+      src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js" 
+      integrity="sha384-3WUbXI7T+/GIrWP/5MDMjhzLyHQ+0utF3PnJ7ozD7UeN1/bbZ96Hk+Vvd024VYfW"
+      crossorigin="anonymous">
+    </script>
   </head>
   <body class="min-h-screen flex flex-col pt-24">
     <nav
