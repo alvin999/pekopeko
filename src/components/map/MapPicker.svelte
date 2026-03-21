@@ -63,7 +63,7 @@
             map?.resize();
           });
 
-          marker = new gl.Marker({ draggable: true })
+          marker = new gl.Marker({ draggable: true, color: '#9E8976' })
             .setLngLat([location.lng, location.lat])
             .addTo(map);
 
