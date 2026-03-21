@@ -31,21 +31,27 @@
   let avatarContainer = $state<HTMLDivElement>();
 
   // Avatar position and dragging state
-  let avatarX = $state(800);
-  let avatarY = $state(100);
-  let avatarScale = $state(1.0);
+  let avatarState = $state({
+    x: 800,
+    y: 100,
+    scale: 1.0
+  });
   
   // Label position state
-  let labelX = $state(60);
-  let labelY = $state(850);
-  let labelScale = $state(1.0);  // New: label scaling
-  let labelWidth = $state(800);   // Store rendered width for hit detection
-  let labelHeight = $state(300);  // Store rendered height for hit detection
+  let labelState = $state({
+    x: 60,
+    y: 850,
+    scale: 1.0,
+    width: 800,
+    height: 300
+  });
 
   // Background image state
-  let imageX = $state(0);
-  let imageY = $state(0);
-  let imageScale = $state(1.0);
+  let imageState = $state({
+    x: 0,
+    y: 0,
+    scale: 1.0
+  });
   
   let isDragging = $state(false);
   let dragTarget: 'avatar' | 'labels' | 'image' | null = $state(null);
@@ -93,61 +99,66 @@
     }
   }
 
+  // --- Canvas Rendering Modules ---
+
+  function drawBackground(ctx: CanvasRenderingContext2D) {
+    ctx.fillStyle = "#F5F2EA"; // Cream background
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+    if (userImage) {
+      const baseScale = Math.max(canvasWidth / userImage.width, canvasHeight / userImage.height);
+      const finalScale = baseScale * imageState.scale;
+      const w = userImage.width * finalScale;
+      const h = userImage.height * finalScale;
+      
+      const startX = (canvasWidth - w) / 2 + imageState.x;
+      const startY = (canvasHeight - h) / 2 + imageState.y;
+      
+      ctx.drawImage(userImage, startX, startY, w, h);
+    }
+  }
+
+  async function drawAvatarLayer(ctx: CanvasRenderingContext2D, dragging: boolean) {
+    const currentSize = AVATAR_SIZE * avatarState.scale;
+    const avatarImg = dragging ? cachedAvatarImg : await getAvatarAsImage();
+    
+    if (avatarImg) {
+      if (!dragging) cachedAvatarImg = avatarImg; // Cache it for dragging
+      ctx.drawImage(avatarImg, avatarState.x, avatarState.y, currentSize, currentSize);
+      
+      // Draw drag boundary
+      if (dragging && dragTarget === 'avatar') {
+        ctx.strokeStyle = "#ffd43b";
+        ctx.lineWidth = 4;
+        ctx.setLineDash([10, 5]);
+        ctx.strokeRect(avatarState.x, avatarState.y, currentSize, currentSize);
+        ctx.setLineDash([]);
+      }
+    }
+  }
+
   async function renderCanvas(dragging: boolean = false) {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Only set processing if we are doing a full refresh (not dragging)
     if (!dragging) isProcessing = true;
 
-    // 1. Clear Canvas
-    ctx.fillStyle = "#F5F2EA"; // Cream background
-    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+    drawBackground(ctx);
+    await drawAvatarLayer(ctx, dragging);
 
-    // 2. Draw User Image
-    if (userImage) {
-      const baseScale = Math.max(canvasWidth / userImage.width, canvasHeight / userImage.height);
-      const finalScale = baseScale * imageScale;
-      const w = userImage.width * finalScale;
-      const h = userImage.height * finalScale;
-      
-      const startX = (canvasWidth - w) / 2 + imageX;
-      const startY = (canvasHeight - h) / 2 + imageY;
-      
-      ctx.drawImage(userImage, startX, startY, w, h);
-    }
-
-    // 3. Render Avatar to Canvas
-    const currentSize = AVATAR_SIZE * avatarScale;
-    const avatarImg = dragging ? cachedAvatarImg : await getAvatarAsImage();
-    if (avatarImg) {
-      if (!dragging) cachedAvatarImg = avatarImg; // Cache it for dragging
-      ctx.drawImage(avatarImg, avatarX, avatarY, currentSize, currentSize);
-      
-      // Draw a subtle border if dragging to show boundary
-      if (dragging && dragTarget === 'avatar') {
-        ctx.strokeStyle = "#ffd43b";
-        ctx.lineWidth = 4;
-        ctx.setLineDash([10, 5]);
-        ctx.strokeRect(avatarX, avatarY, currentSize, currentSize);
-        ctx.setLineDash([]);
-      }
-    }
-
-    // 4. Draw Info (Full mode only)
     if (mode === 'full') {
       const bounds = drawFullInfo(ctx);
-      labelWidth = bounds.width;
-      labelHeight = bounds.height;
+      labelState.width = bounds.width;
+      labelState.height = bounds.height;
     }
 
     if (!dragging) isProcessing = false;
   }
 
   function drawFullInfo(ctx: CanvasRenderingContext2D) {
-    const scale = labelScale;
-    let currentY = labelY;
+    const scale = labelState.scale;
+    let currentY = labelState.y;
     let maxWidth = 0;
 
     // Labels Area drag indicator (only if dragging labels)
@@ -155,7 +166,7 @@
       ctx.strokeStyle = "#ffd43b";
       ctx.lineWidth = 4;
       ctx.setLineDash([10, 5]);
-      ctx.strokeRect(labelX - 20, labelY - 50, labelWidth + 40, labelHeight + 60);
+      ctx.strokeRect(labelState.x - 20, labelState.y - 50, labelState.width + 40, labelState.height + 60);
       ctx.setLineDash([]);
     }
 
@@ -174,11 +185,11 @@
       
       // Label Background
       ctx.fillStyle = "#2D2D2D";
-      ctx.fillRect(labelX, currentY, metrics.width + padding * 2, h);
+      ctx.fillRect(labelState.x, currentY, metrics.width + padding * 2, h);
       
       // Text
       ctx.fillStyle = "#FFFFFF";
-      ctx.fillText(text, labelX + padding, currentY + Math.floor(55 * scale));
+      ctx.fillText(text, labelState.x + padding, currentY + Math.floor(55 * scale));
       
       maxWidth = Math.max(maxWidth, metrics.width + padding * 2);
       currentY += Math.floor(100 * scale);
@@ -194,13 +205,13 @@
       const h = Math.floor(60 * scale);
 
       ctx.fillStyle = "#ffd43b";
-      ctx.fillRect(labelX, currentY, metrics.width + padding * 2, h);
+      ctx.fillRect(labelState.x, currentY, metrics.width + padding * 2, h);
       ctx.strokeStyle = "#2D2D2D";
       ctx.lineWidth = Math.max(2, 6 * scale);
-      ctx.strokeRect(labelX, currentY, metrics.width + padding * 2, h);
+      ctx.strokeRect(labelState.x, currentY, metrics.width + padding * 2, h);
 
       ctx.fillStyle = "#2D2D2D";
-      ctx.fillText(text, labelX + padding, currentY + Math.floor(42 * scale));
+      ctx.fillText(text, labelState.x + padding, currentY + Math.floor(42 * scale));
       
       maxWidth = Math.max(maxWidth, metrics.width + padding * 2);
       currentY += Math.floor(80 * scale);
@@ -208,7 +219,7 @@
 
     // Flavors Row
     if (flavors.length > 0) {
-      let currentX = labelX;
+      let currentX = labelState.x;
       const fontSize = Math.floor(24 * scale);
       ctx.font = `600 ${fontSize}px Inter, system-ui`;
       const padding = Math.floor(12 * scale);
@@ -229,14 +240,14 @@
         ctx.fillText(text, currentX + padding, currentY + Math.floor(32 * scale));
         
         currentX += metrics.width + padding * 2 + gap;
-        maxWidth = Math.max(maxWidth, currentX - labelX);
+        maxWidth = Math.max(maxWidth, currentX - labelState.x);
       });
       currentY += h;
     }
 
     return {
       width: maxWidth,
-      height: currentY - labelY
+      height: currentY - labelState.y
     };
   }
 
@@ -276,24 +287,24 @@
   }
 
   function resetAvatarPosition() {
-    const currentSize = AVATAR_SIZE * avatarScale;
+    const currentSize = AVATAR_SIZE * avatarState.scale;
     if (mode === 'graphics') {
-        avatarX = canvasWidth - currentSize - 40;
-        avatarY = canvasHeight - currentSize - 40;
+        avatarState.x = canvasWidth - currentSize - 40;
+        avatarState.y = canvasHeight - currentSize - 40;
     } else {
-        avatarX = canvasWidth - currentSize - 40;
-        avatarY = 60;
+        avatarState.x = canvasWidth - currentSize - 40;
+        avatarState.y = 60;
     }
   }
 
   function resetAll() {
-    imageX = 0;
-    imageY = 0;
-    imageScale = 1.0;
-    labelX = 60;
-    labelY = 850;
-    labelScale = 1.0;
-    avatarScale = 1.0;
+    imageState.x = 0;
+    imageState.y = 0;
+    imageState.scale = 1.0;
+    labelState.x = 60;
+    labelState.y = selectedRatio.id === 'story' ? 1200 : 850;
+    labelState.scale = 1.0;
+    avatarState.scale = 1.0;
     resetAvatarPosition();
     renderCanvas();
   }
@@ -343,61 +354,78 @@
     }
   });
 
-  // Drag handlers
-  function handleMouseDown(e: MouseEvent) {
-    if (!canvas) return;
+  // --- Interactions & Dragging ---
+
+  function getCanvasCoordinates(clientX: number, clientY: number) {
+    if (!canvas) return { x: 0, y: 0 };
     const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) * (canvasWidth / rect.width);
-    const y = (e.clientY - rect.top) * (canvasHeight / rect.height);
+    const x = (clientX - rect.left) * (canvasWidth / rect.width);
+    const y = (clientY - rect.top) * (canvasHeight / rect.height);
+    return { x, y };
+  }
+
+  function startDragging(x: number, y: number) {
     lastX = x;
     lastY = y;
 
     // Hit test Avatar
-    const currentSize = AVATAR_SIZE * avatarScale;
-    if (x >= avatarX && x <= avatarX + currentSize && y >= avatarY && y <= avatarY + currentSize) {
+    const currentSize = AVATAR_SIZE * avatarState.scale;
+    if (x >= avatarState.x && x <= avatarState.x + currentSize && y >= avatarState.y && y <= avatarState.y + currentSize) {
       isDragging = true;
       dragTarget = 'avatar';
-      return;
+      return true;
     }
 
     // Hit test Labels Area (dynamic box)
-    if (mode === 'full' && x >= labelX - 20 && x <= labelX + labelWidth + 20 && y >= labelY - 60 && y <= labelY + labelHeight + 20) {
+    if (mode === 'full' && x >= labelState.x - 20 && x <= labelState.x + labelState.width + 20 && y >= labelState.y - 60 && y <= labelState.y + labelState.height + 20) {
       isDragging = true;
       dragTarget = 'labels';
-      return;
+      return true;
     }
 
     // Default: Drag Background Image
     if (userImage) {
       isDragging = true;
       dragTarget = 'image';
-      return;
+      return true;
     }
-  }
-
-  function handleMouseMove(e: MouseEvent) {
-    if (!isDragging || !canvas || !dragTarget) return;
-    const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) * (canvasWidth / rect.width);
-    const y = (e.clientY - rect.top) * (canvasHeight / rect.height);
     
+    return false;
+  }
+  
+  function updateDraggingPosition(x: number, y: number) {
+    if (!isDragging || !canvas || !dragTarget) return;
+
     if (dragTarget === 'avatar') {
-      const currentSize = AVATAR_SIZE * avatarScale;
-      avatarX = x - currentSize / 2;
-      avatarY = y - currentSize / 2;
+      const currentSize = AVATAR_SIZE * avatarState.scale;
+      avatarState.x = x - currentSize / 2;
+      avatarState.y = y - currentSize / 2;
     } else if (dragTarget === 'labels') {
-      labelX = x - 50; // Offset for better feel
-      labelY = y - 50;
+      labelState.x = x - 50; // Offset for better feel
+      labelState.y = y - 50;
     } else if (dragTarget === 'image') {
       const dx = x - lastX;
       const dy = y - lastY;
-      imageX += dx;
-      imageY += dy;
+      imageState.x += dx;
+      imageState.y += dy;
     }
     
     lastX = x;
     lastY = y;
     renderCanvas(true); // Dragging mode
+  }
+
+  // Drag handlers
+  function handleMouseDown(e: MouseEvent) {
+    if (!canvas) return;
+    const { x, y } = getCanvasCoordinates(e.clientX, e.clientY);
+    startDragging(x, y);
+  }
+
+  function handleMouseMove(e: MouseEvent) {
+    if (!isDragging) return;
+    const { x, y } = getCanvasCoordinates(e.clientX, e.clientY);
+    updateDraggingPosition(x, y);
   }
 
   function handleMouseUp() {
@@ -410,62 +438,19 @@
   function handleTouchStart(e: TouchEvent) {
     if (!canvas) return;
     const touch = e.touches[0];
-    const rect = canvas.getBoundingClientRect();
-    const x = (touch.clientX - rect.left) * (canvasWidth / rect.width);
-    const y = (touch.clientY - rect.top) * (canvasHeight / rect.height);
-    lastX = x;
-    lastY = y;
-
-    // Hit test Avatar
-    const currentSize = AVATAR_SIZE * avatarScale;
-    if (x >= avatarX && x <= avatarX + currentSize && y >= avatarY && y <= avatarY + currentSize) {
-      isDragging = true;
-      dragTarget = 'avatar';
+    const { x, y } = getCanvasCoordinates(touch.clientX, touch.clientY);
+    
+    if (startDragging(x, y)) {
       e.preventDefault(); // Prevent scrolling while dragging
-      return;
-    }
-
-    // Hit test Labels (dynamic box)
-    if (mode === 'full' && x >= labelX - 20 && x <= labelX + labelWidth + 20 && y >= labelY - 60 && y <= labelY + labelHeight + 20) {
-      isDragging = true;
-      dragTarget = 'labels';
-      e.preventDefault();
-      return;
-    }
-
-    // Drag Image
-    if (userImage) {
-      isDragging = true;
-      dragTarget = 'image';
-      e.preventDefault();
-      return;
     }
   }
 
   function handleTouchMove(e: TouchEvent) {
-    if (!isDragging || !canvas || !dragTarget) return;
+    if (!isDragging) return;
     const touch = e.touches[0];
-    const rect = canvas.getBoundingClientRect();
-    const x = (touch.clientX - rect.left) * (canvasWidth / rect.width);
-    const y = (touch.clientY - rect.top) * (canvasHeight / rect.height);
+    const { x, y } = getCanvasCoordinates(touch.clientX, touch.clientY);
     
-    if (dragTarget === 'avatar') {
-      const currentSize = AVATAR_SIZE * avatarScale;
-      avatarX = x - currentSize / 2;
-      avatarY = y - currentSize / 2;
-    } else if (dragTarget === 'labels') {
-      labelX = x - 50;
-      labelY = y - 50;
-    } else if (dragTarget === 'image') {
-      const dx = x - lastX;
-      const dy = y - lastY;
-      imageX += dx;
-      imageY += dy;
-    }
-    
-    lastX = x;
-    lastY = y;
-    renderCanvas(true);
+    updateDraggingPosition(x, y);
     e.preventDefault();
   }
 
@@ -477,7 +462,7 @@
   $effect(() => {
     // Explicitly track props to avoid unnecessary runs
     const _tags = flavors.join(',');
-    const _deps = [mode, selectedRatio, _tags, mood, drinkType, mouthfeel, itemName, locationName, avatarScale, imageScale];
+    const _deps = [mode, selectedRatio, _tags, mood, drinkType, mouthfeel, itemName, locationName, avatarState.scale, imageState.scale];
     
     // Draw only when open
     if (isOpen) {
@@ -521,7 +506,7 @@
                 min="0.5" 
                 max="2.0" 
                 step="0.05" 
-                bind:value={avatarScale}
+                bind:value={avatarState.scale}
                 oninput={() => renderCanvas(true)}
                 onchange={() => renderCanvas(false)}
                 class="range range-xs range-accent"
@@ -536,7 +521,7 @@
                   min="0.4" 
                   max="1.5" 
                   step="0.05" 
-                  bind:value={labelScale}
+                  bind:value={labelState.scale}
                   oninput={() => renderCanvas()}
                   class="range range-xs range-accent"
                 />
@@ -552,27 +537,25 @@
                 min="0.5" 
                 max="3.0" 
                 step="0.05" 
-                bind:value={imageScale}
+                bind:value={imageState.scale}
                 oninput={() => renderCanvas()}
                 class="range range-xs range-accent"
               />
             </label>
 
+            <!-- Snippet applied above for Scale Controls -->
+
             <div class="flex flex-col gap-4">
               <div class="flex items-center gap-4">
                 <span class="font-black text-sm uppercase">Ratio:</span>
-                <div class="join border-2 border-[--color-border] flex-grow">
+                <div class="join border-2 border-[--color-border] grow">
                   {#each ASPECT_RATIOS as ratio}
                     <button 
-                      class="join-item flex-grow px-2 py-2 text-[10px] font-bold transition-colors {selectedRatio.id === ratio.id ? 'bg-accent text-black font-black' : 'bg-white text-black hover:bg-bg'}"
+                      class="join-item grow px-2 py-2 text-[10px] font-bold transition-colors {selectedRatio.id === ratio.id ? 'bg-accent text-black font-black' : 'bg-white text-black hover:bg-bg'}"
                       onclick={() => {
                         selectedRatio = ratio;
-                        // For 9:16 and others, labels might need repositioning
-                        if (ratio.id === 'story') {
-                          labelY = 1200; // Move labels higher for story
-                        } else {
-                          labelY = 850;
-                        }
+                        // Reposition labels according to ratio
+                        labelState.y = ratio.id === 'story' ? 1200 : 850;
                         resetAvatarPosition();
                       }}
                     >
@@ -585,18 +568,14 @@
               <div class="flex items-center gap-4">
                 <span class="font-black text-sm uppercase">Mode:</span>
                 <div class="join border-2 border-[--color-border]">
-                  <button 
-                    class="join-item px-4 py-2 text-xs font-bold transition-colors {mode === 'graphics' ? 'bg-accent text-black font-black' : 'bg-white text-black hover:bg-bg'}"
-                    onclick={() => mode = 'graphics'}
-                  >
-                    GFX ONLY
-                  </button>
-                  <button 
-                    class="join-item px-4 py-2 text-xs font-bold transition-colors {mode === 'full' ? 'bg-accent text-black font-black' : 'bg-white text-black hover:bg-bg'}"
-                    onclick={() => mode = 'full'}
-                  >
-                    FULL INFO
-                  </button>
+                  {#each [{ id: 'graphics', label: 'GFX ONLY' }, { id: 'full', label: 'FULL INFO' }] as m}
+                    <button 
+                      class="join-item px-4 py-2 text-xs font-bold transition-colors {mode === m.id ? 'bg-accent text-black font-black' : 'bg-white text-black hover:bg-bg'}"
+                      onclick={() => mode = m.id as 'graphics' | 'full'}
+                    >
+                      {m.label}
+                    </button>
+                  {/each}
                 </div>
               </div>
             </div>
