@@ -31,6 +31,7 @@ import type { User, Subscription } from "@supabase/supabase-js";
   let showDraftPrompt = $state(false);
   let showCompositor = $state(false);
   let showPublishConfirm = $state(false);
+  let showResetConfirm = $state(false);
   let showLoginPrompt = $state(false);
   let user = $state<User | null>(null);
   let authListener: Subscription | null = null;
@@ -142,7 +143,7 @@ import type { User, Subscription } from "@supabase/supabase-js";
         `
           : ""}
       >
-        <PreviewSection {displayFlavors} forceFullSize={showPublishConfirm} />
+        <PreviewSection displayFlavors={displayFlavors} forceFullSize={showPublishConfirm || showResetConfirm} />
 
         {#if viewport.isMobile && showPublishConfirm}
           <div
@@ -150,6 +151,15 @@ import type { User, Subscription } from "@supabase/supabase-js";
             class="animate-in fade-in slide-in-from-top-4 duration-300"
           >
             {@render confirmationUI()}
+          </div>
+        {/if}
+
+        {#if viewport.isMobile && showResetConfirm}
+          <div
+            id="mobile-reset-confirm-area"
+            class="animate-in fade-in slide-in-from-top-4 duration-300"
+          >
+            {@render resetConfirmUI()}
           </div>
         {/if}
       </div>
@@ -306,9 +316,11 @@ import type { User, Subscription } from "@supabase/supabase-js";
                 onclick={() => {
                   if (!user) {
                     showLoginPrompt = true;
+                    showResetConfirm = false;
                     return;
                   }
                   showPublishConfirm = true;
+                  showResetConfirm = false;
                   if (viewport.isMobile) {
                     setTimeout(() => {
                       const el = document.getElementById("preview-column");
@@ -334,6 +346,12 @@ import type { User, Subscription } from "@supabase/supabase-js";
               </div>
             {/if}
 
+            {#if !viewport.isMobile && showResetConfirm}
+              <div class="animate-in fade-in zoom-in-95 duration-300">
+                {@render resetConfirmUI()}
+              </div>
+            {/if}
+
             {#if showLoginPrompt}
               <div class="animate-in fade-in zoom-in-95 duration-300">
                 {@render loginPromptUI()}
@@ -351,18 +369,29 @@ import type { User, Subscription } from "@supabase/supabase-js";
         <!-- Reset Button -->
         {#if !postForm.hasPostedToday}
           <div class="text-center">
-            <button
-              type="button"
-              class="text-[10px] font-bold opacity-40 hover:opacity-100 hover:text-error transition-all uppercase tracking-widest decoration-1 underline underline-offset-4"
-              onclick={() => {
-                if (confirm("確定要清空目前所有輸入內容嗎？")) {
-                  postForm.clear();
-                  postForm.reset();
-                }
-              }}
-            >
-              [ Reset / Clear All Fields ]
-            </button>
+            {#if !showResetConfirm}
+              <button
+                type="button"
+                class="text-[10px] font-bold opacity-40 hover:opacity-100 hover:text-error transition-all uppercase tracking-widest decoration-1 underline underline-offset-4"
+                onclick={() => {
+                  showResetConfirm = true;
+                  showPublishConfirm = false;
+                  showLoginPrompt = false;
+                  if (viewport.isMobile) {
+                    setTimeout(() => {
+                      const el = document.getElementById("preview-column");
+                      if (el)
+                        el.scrollIntoView({
+                          behavior: "smooth",
+                          block: "start",
+                        });
+                    }, 50);
+                  }
+                }}
+              >
+                [ Reset / Clear All Fields ]
+              </button>
+            {/if}
           </div>
         {/if}
       </div>
@@ -395,6 +424,39 @@ import type { User, Subscription } from "@supabase/supabase-js";
       <button
         class="flex-1 brutalist-btn bg-white py-4 font-black text-sm hover:bg-bg active:translate-y-1 transition-all"
         onclick={() => (showPublishConfirm = false)}
+      >
+        CANCEL
+      </button>
+    </div>
+  </div>
+{/snippet}
+
+{#snippet resetConfirmUI()}
+  <div
+    class="brutalist-card bg-slate-200 p-6 flex flex-col items-center gap-4 border-4 border-[--color-border] shadow-brutalist w-full"
+  >
+    <div class="text-center">
+      <p class="font-black text-xl italic uppercase title-outline">
+        Clear All Fields?
+      </p>
+      <p class="font-bold text-[10px] opacity-70 mt-1">
+        確定要清空目前所有輸入內容嗎？<br />此動作無法還原。
+      </p>
+    </div>
+    <div class="flex gap-3 w-full">
+      <button
+        class="flex-1 brutalist-btn bg-error text-white py-4 font-black text-sm hover:bg-error/90 active:translate-y-1 transition-all"
+        onclick={() => {
+          postForm.clear();
+          postForm.reset();
+          showResetConfirm = false;
+        }}
+      >
+        CLEAR
+      </button>
+      <button
+        class="flex-1 brutalist-btn bg-white py-4 font-black text-sm hover:bg-bg active:translate-y-1 transition-all"
+        onclick={() => (showResetConfirm = false)}
       >
         CANCEL
       </button>
