@@ -38,9 +38,11 @@ const { title = "杯口杯口 PekoPeko" } = Astro.props;
       <div class="flex-1">
         <a
           href="/"
-          class="text-xl md:text-2xl font-black tracking-tighter uppercase italic title-outline"
-          >杯口杯口 PekoPeko</a
+          class="flex items-center w-fit gap-2 text-xl md:text-2xl font-black tracking-tighter uppercase italic title-outline"
         >
+          <img src="/favicon.svg" alt="PekoPeko Logo" class="w-8 h-8 pointer-events-none" />
+          <span>杯口杯口 PekoPeko</span>
+        </a>
       </div>
       <div class="flex-none" id="auth-nav">
         <UserMenu client:load />
