@@ -1,7 +1,8 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import { postForm } from "../lib/postForm.svelte";
   import { viewport } from "../lib/viewportTracker.svelte";
+  import { supabase } from "../lib/supabase";
 
   // UI Components
   import ToastSystem from "./editor/ToastSystem.svelte";
@@ -11,24 +12,39 @@
   import MoodGrid from "./editor/MoodGrid.svelte";
   import HierarchicalPicker from "./editor/HierarchicalPicker.svelte";
   import ImageShareCompositor from "./ImageShareCompositor.svelte";
-  
+
   // Refactored Sub-components
   import DraftPrompt from "./editor/DraftPrompt.svelte";
   import PostStatusAlert from "./editor/PostStatusAlert.svelte";
   import LocationSection from "./editor/LocationSection.svelte";
 
   // Constants
-  import { 
-    flavorOptions, 
-    originData, 
-    mainTasteOptions, 
-    mouthfeelOptions, 
-    acidityOptions 
+  import {
+    flavorOptions,
+    originData,
+    mainTasteOptions,
+    mouthfeelOptions,
+    acidityOptions,
   } from "../lib/editorConstants";
 
   let showDraftPrompt = $state(false);
   let showCompositor = $state(false);
   let showPublishConfirm = $state(false);
+  let showLoginPrompt = $state(false);
+  let user = $state<any>(null);
+  let authListener: any = null;
+
+  async function handleLogin() {
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin + "/create",
+        queryParams: {
+          prompt: "select_account",
+        },
+      },
+    });
+  }
 
   // Derived logic for Avatar (Filtered Parent Flavors)
   const displayFlavors = $derived(
@@ -44,7 +60,21 @@
     }),
   );
 
+  let viewportCleanup: (() => void) | undefined;
+
   onMount(() => {
+    // Auth Init
+    supabase.auth.getUser().then(({ data: { user: initialUser } }) => {
+      user = initialUser;
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      user = session?.user || null;
+    });
+    authListener = subscription;
+
     const { hasDraft, dateMatch } = postForm.load();
 
     if (hasDraft) {
@@ -57,7 +87,12 @@
     }
 
     postForm.checkAlreadyPosted();
-    return viewport.init();
+    viewportCleanup = viewport.init();
+  });
+
+  onDestroy(() => {
+    if (authListener) authListener.unsubscribe();
+    if (viewportCleanup) viewportCleanup();
   });
 
   $effect(() => {
@@ -82,7 +117,9 @@
 <div class="max-w-4xl mx-auto p-4 space-y-12">
   <div class="text-center">
     <h1 class="text-6xl font-black italic title-outline mb-4">今日杯口</h1>
-    <p class="font-bold opacity-60 uppercase tracking-widest text-xs border-b-2 border-[--color-border] inline-block pb-2">
+    <p
+      class="font-bold opacity-60 uppercase tracking-widest text-xs border-b-2 border-[--color-border] inline-block pb-2"
+    >
       今日限定，每日 0 點重設。
     </p>
   </div>
@@ -92,23 +129,27 @@
 
   <div class="brutalist-card bg-white p-8 md:p-12">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
-      
       <!-- Left: Preview Column -->
-      <div 
+      <div
         id="preview-column"
         class="flex flex-col gap-8 self-start md:sticky md:top-32"
-        style={viewport.isMobile && !showPublishConfirm ? `
+        style={viewport.isMobile && !showPublishConfirm
+          ? `
           position: sticky; 
           top: ${120 - viewport.scrollProgress * 20}px; 
           z-index: 40;
-        ` : ""}
+        `
+          : ""}
       >
         <PreviewSection {displayFlavors} forceFullSize={showPublishConfirm} />
-        
+
         {#if viewport.isMobile && showPublishConfirm}
-           <div id="mobile-confirm-area" class="animate-in fade-in slide-in-from-top-4 duration-300">
-             {@render confirmationUI()}
-           </div>
+          <div
+            id="mobile-confirm-area"
+            class="animate-in fade-in slide-in-from-top-4 duration-300"
+          >
+            {@render confirmationUI()}
+          </div>
         {/if}
       </div>
 
@@ -147,7 +188,9 @@
         <!-- Main Taste -->
         <section class="space-y-4">
           <header class="border-b-2 border-[--color-border] pb-2">
-            <span class="font-black text-xs uppercase tracking-[0.2em] opacity-50">
+            <span
+              class="font-black text-xs uppercase tracking-[0.2em] opacity-50"
+            >
               Main Taste (Select up to two)
             </span>
           </header>
@@ -155,7 +198,9 @@
             {#each mainTasteOptions as opt}
               <button
                 type="button"
-                class="brutalist-badge text-xs! px-3! transition-all {postForm.mainTastes.includes(opt.name)
+                class="brutalist-badge text-xs! px-3! transition-all {postForm.mainTastes.includes(
+                  opt.name,
+                )
                   ? 'badge-accent -translate-y-1 shadow-[2px_2px_0px_0px_var(--color-border)]'
                   : 'badge-white opacity-60'}"
                 onclick={() => postForm.toggleMainTaste(opt.name)}
@@ -168,12 +213,16 @@
 
         <!-- Acidity -->
         <section class="space-y-4">
-          <IntensitySlider label="Acidity" bind:value={postForm.acidityIntensity} />
+          <IntensitySlider
+            label="Acidity"
+            bind:value={postForm.acidityIntensity}
+          />
           <div class="flex gap-4">
             {#each acidityOptions as opt}
               <button
                 type="button"
-                class="flex-1 py-3 text-xs font-black border-3 border-[--color-border] whitespace-pre-line transition-all {postForm.acidityType === opt.name
+                class="flex-1 py-3 text-xs font-black border-3 border-[--color-border] whitespace-pre-line transition-all {postForm.acidityType ===
+                opt.name
                   ? 'bg-accent -translate-y-1 shadow-brutalist-sm'
                   : 'bg-white opacity-60 shadow-none'}"
                 onclick={() => (postForm.acidityType = opt.name as any)}
@@ -185,7 +234,10 @@
         </section>
 
         <!-- Sweetness -->
-        <IntensitySlider label="Sweetness" bind:value={postForm.sweetnessIntensity} />
+        <IntensitySlider
+          label="Sweetness"
+          bind:value={postForm.sweetnessIntensity}
+        />
 
         <!-- Mouthfeel -->
         <section class="space-y-4">
@@ -193,7 +245,9 @@
           <div class="flex flex-wrap gap-3">
             {#each mouthfeelOptions as opt}
               <button
-                class="brutalist-badge text-xs! px-3! transition-all {postForm.mouthfeelTypes.includes(opt.name)
+                class="brutalist-badge text-xs! px-3! transition-all {postForm.mouthfeelTypes.includes(
+                  opt.name,
+                )
                   ? 'badge-accent -translate-y-1 shadow-[2px_2px_0px_0px_var(--color-border)]'
                   : 'badge-white opacity-60'}"
                 onclick={() => postForm.toggleMouthfeel(opt.name)}
@@ -205,11 +259,13 @@
         </section>
 
         <MoodGrid />
-        
+
         <LocationSection />
 
         {#if postForm.errorMsg}
-          <div class="brutalist-badge bg-error text-white w-full! py-2! text-center">
+          <div
+            class="brutalist-badge bg-error text-white w-full! py-2! text-center"
+          >
             {postForm.errorMsg}
           </div>
         {/if}
@@ -220,23 +276,46 @@
               class="brutalist-btn bg-white hover:bg-accent w-full py-4 flex items-center justify-center gap-2 group transition-all"
               onclick={() => (showCompositor = true)}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="group-hover:rotate-12 transition-transform">
-                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="group-hover:rotate-12 transition-transform"
+              >
+                <path
+                  d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
+                />
                 <circle cx="12" cy="13" r="4" />
               </svg>
-              <span class="font-black text-sm uppercase italic">Create Share Image</span>
+              <span class="font-black text-sm uppercase italic"
+                >Create Share Image</span
+              >
             </button>
 
-            {#if !showPublishConfirm}
+            {#if !showPublishConfirm && !showLoginPrompt}
               <button
                 class="brutalist-btn-primary w-full! py-6! text-xl"
                 disabled={postForm.isLoading || postForm.hasPostedToday}
                 onclick={() => {
+                  if (!user) {
+                    showLoginPrompt = true;
+                    return;
+                  }
                   showPublishConfirm = true;
                   if (viewport.isMobile) {
                     setTimeout(() => {
                       const el = document.getElementById("preview-column");
-                      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                      if (el)
+                        el.scrollIntoView({
+                          behavior: "smooth",
+                          block: "start",
+                        });
                     }, 50);
                   }
                 }}
@@ -253,9 +332,17 @@
                 {@render confirmationUI()}
               </div>
             {/if}
+
+            {#if showLoginPrompt}
+              <div class="animate-in fade-in zoom-in-95 duration-300">
+                {@render loginPromptUI()}
+              </div>
+            {/if}
           </div>
         {:else}
-          <div class="brutalist-badge bg-accent w-full! py-4! text-center font-black">
+          <div
+            class="brutalist-badge bg-accent w-full! py-4! text-center font-black"
+          >
             ALREADY PUBLISHED TODAY
           </div>
         {/if}
@@ -283,10 +370,16 @@
 </div>
 
 {#snippet confirmationUI()}
-  <div class="brutalist-card bg-accent p-6 flex flex-col items-center gap-4 border-4 border-[--color-border] shadow-brutalist w-full">
+  <div
+    class="brutalist-card bg-accent p-6 flex flex-col items-center gap-4 border-4 border-[--color-border] shadow-brutalist w-full"
+  >
     <div class="text-center">
-      <p class="font-black text-xl italic uppercase title-outline">Ready to Publish?</p>
-      <p class="font-bold text-[10px] opacity-70 mt-1">每日一篇限定，請確認內容正確哦！</p>
+      <p class="font-black text-xl italic uppercase title-outline">
+        Ready to Publish?
+      </p>
+      <p class="font-bold text-[10px] opacity-70 mt-1">
+        每日一篇限定，下好離手？
+      </p>
     </div>
     <div class="flex gap-3 w-full">
       <button
@@ -303,6 +396,35 @@
         onclick={() => (showPublishConfirm = false)}
       >
         CANCEL
+      </button>
+    </div>
+  </div>
+{/snippet}
+
+{#snippet loginPromptUI()}
+  <div
+    class="brutalist-card bg-[#F5F2EA] p-6 flex flex-col items-center gap-4 border-4 border-[--color-border] shadow-brutalist w-full"
+  >
+    <div class="text-center">
+      <p class="font-black text-xl italic uppercase title-outline">
+        Want to Publish?
+      </p>
+      <p class="font-bold text-[10px] opacity-70 mt-1">
+        您的心得值得被記錄！<br />請先登入以保存您的今日杯口。
+      </p>
+    </div>
+    <div class="flex flex-col gap-3 w-full">
+      <button
+        class="w-full brutalist-btn bg-white py-4 font-black text-sm hover:bg-[--color-accent] active:translate-y-1 transition-all flex items-center justify-center gap-2"
+        onclick={handleLogin}
+      >
+        <span class="google-text-gradient">GOOGLE</span> SIGN IN
+      </button>
+      <button
+        class="w-full brutalist-btn bg-black text-white py-2 font-bold text-[10px] hover:bg-black/90 active:translate-y-1 transition-all uppercase"
+        onclick={() => (showLoginPrompt = false)}
+      >
+        MAYBE LATER
       </button>
     </div>
   </div>

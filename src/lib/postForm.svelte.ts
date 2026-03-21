@@ -23,6 +23,27 @@ export class PostForm {
   errorMsg = $state("");
   hasPostedToday = $state(false);
   private STORAGE_KEY = 'pekopeko_post_draft';
+  
+  get isEmpty() {
+    return (
+      this.itemName === "" &&
+      this.flavors.length === 0 &&
+      this.mainTastes.length === 0 &&
+      this.mouthfeelTypes.length === 0 &&
+      this.shopSearchName === "" &&
+      this.mood === "🙂" &&
+      this.drinkType === "coffee" &&
+      this.flavorIntensity === "medium" &&
+      this.acidityIntensity === "medium" &&
+      this.acidityType === "sweet" &&
+      this.sweetnessIntensity === "medium" &&
+      this.mouthfeel === "medium" &&
+      this.lat === null &&
+      this.lng === null &&
+      this.shopId === null &&
+      !this.isLocationSelected
+    );
+  }
 
   async checkAlreadyPosted() {
     const { data: { user } } = await supabase.auth.getUser();
@@ -44,6 +65,13 @@ export class PostForm {
 
   persist() {
     if (typeof localStorage === 'undefined') return;
+    
+    // 如果是空的，就清除 localStorage 而不是存入空草稿
+    if (this.isEmpty) {
+      this.clear();
+      return;
+    }
+
     const data = {
       drinkType: this.drinkType,
       itemName: this.itemName,
@@ -191,7 +219,10 @@ export class PostForm {
       await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin + '/create'
+          redirectTo: window.location.origin + '/create',
+          queryParams: {
+            prompt: 'select_account'
+          }
         }
       });
       this.isLoading = false;
