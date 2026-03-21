@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   // 僅使用型別，實體由 Layout.astro 的 CDN 載入
   import type maplibregl from 'maplibre-gl';
   import 'maplibre-gl/dist/maplibre-gl.css';
@@ -17,11 +17,16 @@
   let map: maplibregl.Map | undefined;
 
   onMount(() => {
-    if (!lat || !lng || !mapContainer) return;
+    if (!lat || !lng) return;
 
     const initMap = async () => {
-      // 延遲 200ms
+      // 1. 等待 Svelte DOM 更新
+      await tick();
+
+      // 2. 延遲 200ms 確保容器尺寸穩定
       await new Promise(resolve => setTimeout(resolve, 200));
+
+      if (map || !mapContainer) return;
 
       try {
         const gl = (window as any).maplibregl;
@@ -30,8 +35,13 @@
           return;
         }
 
+        // 再次確認容器真的存在於 DOM 中
+        if (!(mapContainer instanceof HTMLElement)) {
+            return;
+        }
+
         map = new gl.Map({
-          container: mapContainer!,
+          container: mapContainer,
           style: 'https://tiles.openfreemap.org/styles/liberty',
           center: [lng, lat],
           zoom: 16,
