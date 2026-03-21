@@ -22,7 +22,9 @@
   });
 
   onDestroy(() => {
-    window.removeEventListener('pekopeko:map-move', handleMapMove);
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('pekopeko:map-move', handleMapMove);
+    }
   });
   let searchSuggestions = $state<
     { name: string; lat: number; lng: number; id?: string; source: string }[]

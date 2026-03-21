@@ -21,9 +21,11 @@
 
   // 發送自定義事件到全域 (方案 A)
   function dispatchMapMove(lat: number, lng: number, name?: string) {
-    window.dispatchEvent(new CustomEvent('pekopeko:map-move', {
-      detail: { lat, lng, name }
-    }));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('pekopeko:map-move', {
+        detail: { lat, lng, name }
+      }));
+    }
   }
 
   onMount(() => {
@@ -137,7 +139,7 @@
   });
 
   function relocate() {
-    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+    if (typeof window === 'undefined' || typeof navigator === 'undefined' || !navigator.geolocation) {
       alert("您的瀏覽器不支援地理定位元件。");
       return;
     }
