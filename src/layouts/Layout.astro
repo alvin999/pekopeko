@@ -18,13 +18,17 @@ const { title = "杯口杯口 PekoPeko" } = Astro.props;
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Lexend:wght@800&display=swap"
       rel="stylesheet"
     />
-    <!-- MapLibre GL JS (CDN 採用 3.6.2 穩定版，解決 4.x 對樣式 JSON 的型別報錯問題) -->
+    <!-- MapLibre GL JS (升級至 v5.1.1 最新版，搭配本地淨化樣式) -->
     <link 
       rel="stylesheet" 
-      href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" 
+      href="https://unpkg.com/maplibre-gl@5.1.1/dist/maplibre-gl.css" 
+      integrity="sha384-Nq6PQ+9vJPvw7U/VfDELyrWoGQMsy0gi6QShhaSrGzkpF5KkM40csg2leky+YMTd"
+      crossorigin="anonymous"
     />
     <script 
-      src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js">
+      src="https://unpkg.com/maplibre-gl@5.1.1/dist/maplibre-gl.js"
+      integrity="sha384-xhLGpWVD/5og6klR5E6Amomh5zYGNOEuBKTMB3UMYX5e3vef0vBOH298qckxViO5"
+      crossorigin="anonymous">
     </script>
   </head>
   <body class="min-h-screen flex flex-col pt-24">

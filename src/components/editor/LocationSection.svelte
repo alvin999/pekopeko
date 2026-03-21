@@ -4,7 +4,7 @@
   import { supabase } from "../../lib/supabase";
   import MapPicker from "../map/MapPicker.svelte";
 
-  let showMap = $state(false);
+  // let showMap = $state(false); // 移除開關狀態，改為永久顯示
   // ... (其餘 state 不變)
 
   const handleMapMove = (e: any) => {
@@ -92,7 +92,7 @@
     postForm.shopId = s.id || null;
     postForm.isLocationSelected = true; // 明確點選建議
     searchSuggestions = [];
-    showMap = true; // 選取後展示地圖確認
+    // showMap = true; // 移除開關後不需此行
 
     // 方案 A: 發送事件告知地圖移動
     if (typeof window !== 'undefined') {
@@ -108,13 +108,6 @@
     <span class="font-black text-xs uppercase tracking-[0.2em] opacity-50">
       Discovery Location
     </span>
-    <button
-      type="button"
-      class="text-[10px] font-bold underline decoration-2 underline-offset-4 hover:text-accent"
-      onclick={() => (showMap = !showMap)}
-    >
-      {showMap ? "[- Close Map]" : "[+ Add Map Location]"}
-    </button>
   </div>
 
   <div class="bg-[#F5F2EA] border-2 border-[--color-border] p-4 space-y-4">
@@ -157,7 +150,7 @@
       {/if}
     </div>
 
-    <div class={showMap ? "animate-in fade-in zoom-in-95 duration-200" : "hidden"}>
+    <div class="animate-in fade-in zoom-in-95 duration-200">
       <MapPicker
         location={{
           lat: postForm.lat || 25.0339,
