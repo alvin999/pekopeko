@@ -117,4 +117,4 @@ export const mouthfeelOptions = [
 export const acidityOptions = [
   { name: "dry", label: "DRY\n(HERBY, GRASSY, TART)" },
   { name: "sweet", label: "SWEET\n(JUICY, BRIGHT)" },
-];
+] as const;

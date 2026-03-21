@@ -2,47 +2,53 @@ import { supabase } from "./supabase";
 import { toast } from "./toastStore.svelte";
 import { getLocalDateString, isValidPostDate } from "./dateUtils";
 
+const INITIAL_VALUES = {
+  drinkType: "coffee" as "coffee" | "tea",
+  itemName: "",
+  flavors: [] as string[],
+  flavorIntensity: "medium" as "low" | "medium" | "high",
+  mainTastes: [] as string[],
+  acidityIntensity: "medium" as "low" | "medium" | "high",
+  acidityType: "sweet" as "dry" | "sweet",
+  sweetnessIntensity: "medium" as "low" | "medium" | "high",
+  mouthfeel: "medium" as "low" | "medium" | "high",
+  mouthfeelTypes: [] as string[],
+  mood: "🙂",
+  shopSearchName: "",
+  lat: null as number | null,
+  lng: null as number | null,
+  shopId: null as string | null,
+  isLocationSelected: false,
+};
+
 export class PostForm {
-  drinkType = $state<"coffee" | "tea">("coffee");
-  itemName = $state("");
-  flavors = $state<string[]>([]);
-  flavorIntensity = $state<"low" | "medium" | "high">("medium");
-  mainTastes = $state<string[]>([]);
-  acidityIntensity = $state<"low" | "medium" | "high">("medium");
-  acidityType = $state<"dry" | "sweet">("sweet");
-  sweetnessIntensity = $state<"low" | "medium" | "high">("medium");
-  mouthfeel = $state<"low" | "medium" | "high">("medium");
-  mouthfeelTypes = $state<string[]>([]);
-  mood = $state("🙂");
-  shopSearchName = $state("");
-  lat = $state<number | null>(null);
-  lng = $state<number | null>(null);
-  shopId = $state<string | null>(null);
-  isLocationSelected = $state(false); // 標記是否為透過建議選取的權威地點
+  drinkType = $state(INITIAL_VALUES.drinkType);
+  itemName = $state(INITIAL_VALUES.itemName);
+  flavors = $state<string[]>([...INITIAL_VALUES.flavors]);
+  flavorIntensity = $state(INITIAL_VALUES.flavorIntensity);
+  mainTastes = $state<string[]>([...INITIAL_VALUES.mainTastes]);
+  acidityIntensity = $state(INITIAL_VALUES.acidityIntensity);
+  acidityType = $state(INITIAL_VALUES.acidityType);
+  sweetnessIntensity = $state(INITIAL_VALUES.sweetnessIntensity);
+  mouthfeel = $state(INITIAL_VALUES.mouthfeel);
+  mouthfeelTypes = $state<string[]>([...INITIAL_VALUES.mouthfeelTypes]);
+  mood = $state(INITIAL_VALUES.mood);
+  shopSearchName = $state(INITIAL_VALUES.shopSearchName);
+  lat = $state(INITIAL_VALUES.lat);
+  lng = $state(INITIAL_VALUES.lng);
+  shopId = $state(INITIAL_VALUES.shopId);
+  isLocationSelected = $state(INITIAL_VALUES.isLocationSelected);
   isLoading = $state(false);
   errorMsg = $state("");
   hasPostedToday = $state(false);
   private STORAGE_KEY = 'pekopeko_post_draft';
   
   get isEmpty() {
-    return (
-      this.itemName === "" &&
-      this.flavors.length === 0 &&
-      this.mainTastes.length === 0 &&
-      this.mouthfeelTypes.length === 0 &&
-      this.shopSearchName === "" &&
-      this.mood === "🙂" &&
-      this.drinkType === "coffee" &&
-      this.flavorIntensity === "medium" &&
-      this.acidityIntensity === "medium" &&
-      this.acidityType === "sweet" &&
-      this.sweetnessIntensity === "medium" &&
-      this.mouthfeel === "medium" &&
-      this.lat === null &&
-      this.lng === null &&
-      this.shopId === null &&
-      !this.isLocationSelected
-    );
+    return Object.entries(INITIAL_VALUES).every(([key, defaultValue]) => {
+      const currentValue = (this as any)[key];
+      if (Array.isArray(currentValue)) return currentValue.length === 0;
+      return currentValue === defaultValue;
+    });
   }
 
   async checkAlreadyPosted() {
@@ -134,23 +140,14 @@ export class PostForm {
   }
 
   reset() {
-    this.drinkType = "coffee";
-    this.itemName = "";
-    this.flavors = [];
-    this.flavorIntensity = "medium";
-    this.mainTastes = [];
-    this.acidityIntensity = "medium";
-    this.acidityType = "sweet";
-    this.sweetnessIntensity = "medium";
-    this.mouthfeel = "medium";
-    this.mouthfeelTypes = [];
-    this.mood = "🙂";
-    this.shopSearchName = "";
-    this.lat = null;
-    this.lng = null;
-    this.shopId = null;
-    this.isLocationSelected = false;
-    this.errorMsg = "";
+    Object.assign(this, {
+      ...INITIAL_VALUES,
+      // 陣列需要重新指派以確保反應性與獨立性
+      flavors: [...INITIAL_VALUES.flavors],
+      mainTastes: [...INITIAL_VALUES.mainTastes],
+      mouthfeelTypes: [...INITIAL_VALUES.mouthfeelTypes],
+      errorMsg: ""
+    });
   }
 
   clear() {

@@ -3,6 +3,7 @@
   import { postForm } from "../lib/postForm.svelte";
   import { viewport } from "../lib/viewportTracker.svelte";
   import { supabase } from "../lib/supabase";
+import type { User, Subscription } from "@supabase/supabase-js";
 
   // UI Components
   import ToastSystem from "./editor/ToastSystem.svelte";
@@ -31,8 +32,8 @@
   let showCompositor = $state(false);
   let showPublishConfirm = $state(false);
   let showLoginPrompt = $state(false);
-  let user = $state<any>(null);
-  let authListener: any = null;
+  let user = $state<User | null>(null);
+  let authListener: Subscription | null = null;
 
   async function handleLogin() {
     await supabase.auth.signInWithOAuth({
@@ -225,7 +226,7 @@
                 opt.name
                   ? 'bg-accent -translate-y-1 shadow-brutalist-sm'
                   : 'bg-white opacity-60 shadow-none'}"
-                onclick={() => (postForm.acidityType = opt.name as any)}
+                onclick={() => (postForm.acidityType = opt.name)}
               >
                 {opt.label}
               </button>
