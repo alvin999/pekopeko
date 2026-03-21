@@ -42,45 +42,11 @@
 
         map = new gl.Map({
           container: mapContainer,
-          style: 'https://tiles.openfreemap.org/styles/liberty',
+          style: '/map/style.json', // 使用本地已預先清洗過 (Sanitized) 的樣式檔
           center: [lng, lat],
           zoom: 16,
           interactive: false // 靜態展示
         });
-
-        // 淨化樣式中的 null 值 (進階版：遞迴刪除)
-        const fetchAndSanitizeStyle = async () => {
-          try {
-            const resp = await fetch('https://tiles.openfreemap.org/styles/liberty');
-            const style = await resp.json();
-            
-            const sanitize = (obj: any) => {
-              if (Array.isArray(obj)) {
-                for (let i = 0; i < obj.length; i++) {
-                  if (obj[i] === null) {
-                    obj[i] = 0;
-                  } else {
-                    sanitize(obj[i]);
-                  }
-                }
-              } else if (obj !== null && typeof obj === 'object') {
-                Object.keys(obj).forEach(key => {
-                  if (obj[key] === null) {
-                    delete obj[key];
-                  } else {
-                    sanitize(obj[key]);
-                  }
-                });
-              }
-            };
-            sanitize(style);
-            if (map) map.setStyle(style);
-          } catch (e) {
-            console.warn("MapView 進階樣式淨化失敗:", e);
-          }
-        };
-
-        fetchAndSanitizeStyle();
 
         if (map) {
           map.on('load', () => {

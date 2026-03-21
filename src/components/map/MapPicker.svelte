@@ -46,44 +46,10 @@
 
         map = new gl.Map({
           container: mapContainer,
-          style: 'https://tiles.openfreemap.org/styles/liberty', // 先設為 URL，等等如果是成功 fetch 則改用地標對象
+          style: '/map/style.json', // 使用本地已預先清洗過 (Sanitized) 的樣式檔，避免 null 導致的 Vercel 渲染錯誤
           center: [location.lng, location.lat],
           zoom: 15
         });
-
-        // 為了極致穩定，我們手動獲取樣式並淨化 null 值 (MapLibre 4.x+ 對 null 極度敏感)
-        const fetchAndSanitizeStyle = async () => {
-          try {
-            const resp = await fetch('https://tiles.openfreemap.org/styles/liberty');
-            const style = await resp.json();
-            
-            const sanitize = (obj: any) => {
-              if (Array.isArray(obj)) {
-                for (let i = 0; i < obj.length; i++) {
-                  if (obj[i] === null) {
-                    obj[i] = 0; // 陣列中的 null 通常是運算式的一部分，換成 0 較安全
-                  } else {
-                    sanitize(obj[i]);
-                  }
-                }
-              } else if (obj !== null && typeof obj === 'object') {
-                Object.keys(obj).forEach(key => {
-                  if (obj[key] === null) {
-                    delete obj[key]; // 直接刪除，迫使引擎使用預設值
-                  } else {
-                    sanitize(obj[key]);
-                  }
-                });
-              }
-            };
-            sanitize(style);
-            if (map) map.setStyle(style);
-          } catch (e) {
-            console.warn("樣式進階淨化失敗:", e);
-          }
-        };
-
-        fetchAndSanitizeStyle();
 
         if (map) {
           map.on('load', () => {
