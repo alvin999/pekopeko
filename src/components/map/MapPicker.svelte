@@ -59,11 +59,17 @@
             
             const sanitize = (obj: any) => {
               if (Array.isArray(obj)) {
-                obj.forEach(v => sanitize(v));
+                for (let i = 0; i < obj.length; i++) {
+                  if (obj[i] === null) {
+                    obj[i] = 0; // 陣列中的 null 通常是運算式的一部分，換成 0 較安全
+                  } else {
+                    sanitize(obj[i]);
+                  }
+                }
               } else if (obj !== null && typeof obj === 'object') {
                 Object.keys(obj).forEach(key => {
                   if (obj[key] === null) {
-                    obj[key] = undefined;
+                    delete obj[key]; // 直接刪除，迫使引擎使用預設值
                   } else {
                     sanitize(obj[key]);
                   }
@@ -73,7 +79,7 @@
             sanitize(style);
             if (map) map.setStyle(style);
           } catch (e) {
-            console.warn("樣式淨化失敗，維持預設 URL 載入:", e);
+            console.warn("樣式進階淨化失敗:", e);
           }
         };
 

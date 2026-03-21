@@ -48,7 +48,7 @@
           interactive: false // 靜態展示
         });
 
-        // 淨化樣式中的 null 值
+        // 淨化樣式中的 null 值 (進階版：遞迴刪除)
         const fetchAndSanitizeStyle = async () => {
           try {
             const resp = await fetch('https://tiles.openfreemap.org/styles/liberty');
@@ -56,11 +56,17 @@
             
             const sanitize = (obj: any) => {
               if (Array.isArray(obj)) {
-                obj.forEach(v => sanitize(v));
+                for (let i = 0; i < obj.length; i++) {
+                  if (obj[i] === null) {
+                    obj[i] = 0;
+                  } else {
+                    sanitize(obj[i]);
+                  }
+                }
               } else if (obj !== null && typeof obj === 'object') {
                 Object.keys(obj).forEach(key => {
                   if (obj[key] === null) {
-                    obj[key] = undefined;
+                    delete obj[key];
                   } else {
                     sanitize(obj[key]);
                   }
@@ -70,7 +76,7 @@
             sanitize(style);
             if (map) map.setStyle(style);
           } catch (e) {
-            console.warn("MapView 樣式淨化失敗:", e);
+            console.warn("MapView 進階樣式淨化失敗:", e);
           }
         };
 
