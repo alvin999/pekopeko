@@ -91,12 +91,40 @@
         const img = new Image();
         img.onload = () => {
           userImage = img;
-          renderCanvas();
+          triggerRender();
         };
         img.src = event.target?.result as string;
       };
       reader.readAsDataURL(file);
     }
+  }
+
+  // --- CustomEvent & Actions ---
+  
+  function triggerRender(dragging: boolean = false) {
+    if (!canvas) return;
+    canvas.dispatchEvent(new CustomEvent('peko:render', { 
+      detail: { dragging } 
+    }));
+  }
+
+  function setupCanvas(node: HTMLCanvasElement) {
+    const handleRender = (e: any) => {
+      renderCanvas(e.detail?.dragging || false);
+    };
+    node.addEventListener('peko:render', handleRender);
+    
+    // Initial draw - delay more to ensure AvatarGenerator has mounted its SVG
+    setTimeout(() => {
+        console.log("[Peko] Triggering initial render...");
+        triggerRender();
+    }, 500);
+
+    return {
+      destroy() {
+        node.removeEventListener('peko:render', handleRender);
+      }
+    };
   }
 
   // --- Canvas Rendering Modules ---
@@ -118,42 +146,56 @@
     }
   }
 
-  async function drawAvatarLayer(ctx: CanvasRenderingContext2D, dragging: boolean) {
+  function drawAvatarLayer(ctx: CanvasRenderingContext2D, avatarImg: HTMLImageElement | null, dragging: boolean) {
+    if (!avatarImg) return;
     const currentSize = AVATAR_SIZE * avatarState.scale;
-    const avatarImg = dragging ? cachedAvatarImg : await getAvatarAsImage();
     
-    if (avatarImg) {
-      if (!dragging) cachedAvatarImg = avatarImg; // Cache it for dragging
-      ctx.drawImage(avatarImg, avatarState.x, avatarState.y, currentSize, currentSize);
-      
-      // Draw drag boundary
-      if (dragging && dragTarget === 'avatar') {
-        ctx.strokeStyle = "#ffd43b";
-        ctx.lineWidth = 4;
-        ctx.setLineDash([10, 5]);
-        ctx.strokeRect(avatarState.x, avatarState.y, currentSize, currentSize);
-        ctx.setLineDash([]);
-      }
+    ctx.drawImage(avatarImg, avatarState.x, avatarState.y, currentSize, currentSize);
+    
+    // Draw drag boundary
+    if (dragging && dragTarget === 'avatar') {
+      ctx.strokeStyle = "#ffd43b";
+      ctx.lineWidth = 4;
+      ctx.setLineDash([10, 5]);
+      ctx.strokeRect(avatarState.x, avatarState.y, currentSize, currentSize);
+      ctx.setLineDash([]);
     }
   }
 
+  let isRendering = false;
   async function renderCanvas(dragging: boolean = false) {
-    if (!canvas) return;
+    if (!canvas || isRendering) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // CRITICAL: We MUST prepare all async assets BEFORE clearing/drawing the visible canvas
+    // This is what prevents the flickering (frame with only background)
     if (!dragging) isProcessing = true;
+    isRendering = true;
 
-    drawBackground(ctx);
-    await drawAvatarLayer(ctx, dragging);
+    try {
+      const avatarImg = dragging ? cachedAvatarImg : await getAvatarAsImage();
+      if (!avatarImg && !dragging) {
+          console.warn("[Peko] No avatar image available (SVG not ready?)");
+      }
+      
+      if (!dragging && avatarImg) cachedAvatarImg = avatarImg;
 
-    if (mode === 'full') {
-      const bounds = drawFullInfo(ctx);
-      labelState.width = bounds.width;
-      labelState.height = bounds.height;
+      // NOW we draw everything synchronously in one single frame
+      drawBackground(ctx);
+      drawAvatarLayer(ctx, avatarImg, dragging);
+
+      if (mode === 'full') {
+        const bounds = drawFullInfo(ctx);
+        labelState.width = bounds.width;
+        labelState.height = bounds.height;
+      }
+    } catch (err) {
+      console.error("[Peko] Render failed:", err);
+    } finally {
+      if (!dragging) isProcessing = false;
+      isRendering = false;
     }
-
-    if (!dragging) isProcessing = false;
   }
 
   function drawFullInfo(ctx: CanvasRenderingContext2D) {
@@ -306,7 +348,7 @@
     labelState.scale = 1.0;
     avatarState.scale = 1.0;
     resetAvatarPosition();
-    renderCanvas();
+    triggerRender();
   }
 
   async function shareImage() {
@@ -350,7 +392,7 @@
 
   $effect(() => {
     if (isOpen) {
-      setTimeout(renderCanvas, 100);
+      setTimeout(triggerRender, 100);
     }
   });
 
@@ -412,7 +454,7 @@
     
     lastX = x;
     lastY = y;
-    renderCanvas(true); // Dragging mode
+    triggerRender(true); // Dragging mode
   }
 
   // Drag handlers
@@ -431,7 +473,7 @@
   function handleMouseUp() {
     isDragging = false;
     dragTarget = null;
-    renderCanvas(false); // Full quality refresh
+    triggerRender(false); // Full quality refresh
   }
 
   // Touch handlers
@@ -466,7 +508,7 @@
     
     // Draw only when open
     if (isOpen) {
-        renderCanvas();
+        triggerRender();
     }
   });
 </script>
@@ -507,8 +549,8 @@
                 max="2.0" 
                 step="0.05" 
                 bind:value={avatarState.scale}
-                oninput={() => renderCanvas(true)}
-                onchange={() => renderCanvas(false)}
+                oninput={() => triggerRender(true)}
+                onchange={() => triggerRender(false)}
                 class="range range-xs range-accent"
               />
             </label>
@@ -522,7 +564,7 @@
                   max="1.5" 
                   step="0.05" 
                   bind:value={labelState.scale}
-                  oninput={() => renderCanvas()}
+                  oninput={() => triggerRender()}
                   class="range range-xs range-accent"
                 />
               </label>
@@ -538,7 +580,7 @@
                 max="3.0" 
                 step="0.05" 
                 bind:value={imageState.scale}
-                oninput={() => renderCanvas()}
+                oninput={() => triggerRender()}
                 class="range range-xs range-accent"
               />
             </label>
@@ -609,6 +651,7 @@
       <div class="flex flex-col items-center justify-center gap-4 bg-bg p-4 border-4 border-[--color-border] shadow-[inset_4px_4px_10px_rgba(0,0,0,0.1)]">
         <div class="relative w-full bg-white shadow-brutalist overflow-hidden border-2 border-[--color-border]" style="aspect-ratio: {canvasWidth} / {canvasHeight}">
             <canvas 
+                use:setupCanvas
                 bind:this={canvas} 
                 width={canvasWidth} 
                 height={canvasHeight}
