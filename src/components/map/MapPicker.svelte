@@ -46,10 +46,38 @@
 
         map = new gl.Map({
           container: mapContainer,
-          style: 'https://tiles.openfreemap.org/styles/liberty',
+          style: 'https://tiles.openfreemap.org/styles/liberty', // 先設為 URL，等等如果是成功 fetch 則改用地標對象
           center: [location.lng, location.lat],
           zoom: 15
         });
+
+        // 為了極致穩定，我們手動獲取樣式並淨化 null 值 (MapLibre 4.x+ 對 null 極度敏感)
+        const fetchAndSanitizeStyle = async () => {
+          try {
+            const resp = await fetch('https://tiles.openfreemap.org/styles/liberty');
+            const style = await resp.json();
+            
+            const sanitize = (obj: any) => {
+              if (Array.isArray(obj)) {
+                obj.forEach(v => sanitize(v));
+              } else if (obj !== null && typeof obj === 'object') {
+                Object.keys(obj).forEach(key => {
+                  if (obj[key] === null) {
+                    obj[key] = undefined;
+                  } else {
+                    sanitize(obj[key]);
+                  }
+                });
+              }
+            };
+            sanitize(style);
+            if (map) map.setStyle(style);
+          } catch (e) {
+            console.warn("樣式淨化失敗，維持預設 URL 載入:", e);
+          }
+        };
+
+        fetchAndSanitizeStyle();
 
         if (map) {
           map.on('load', () => {
