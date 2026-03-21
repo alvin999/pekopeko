@@ -93,6 +93,13 @@
     postForm.isLocationSelected = true; // 明確點選建議
     searchSuggestions = [];
     showMap = true; // 選取後展示地圖確認
+
+    // 方案 A: 發送事件告知地圖移動
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('pekopeko:map-move-to', {
+        detail: { lat: s.lat, lng: s.lng }
+      }));
+    }
   }
 </script>
 

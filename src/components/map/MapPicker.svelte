@@ -122,7 +122,25 @@
 
     initMap();
 
-    return () => map?.remove();
+    // 監聽外部「移動到指定位置」的請求
+    const handleMoveTo = (e: any) => {
+      const { lat, lng } = e.detail;
+      if (map && marker) {
+        map.flyTo({ center: [lng, lat], zoom: 16 });
+        marker.setLngLat([lng, lat]);
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('pekopeko:map-move-to', handleMoveTo);
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('pekopeko:map-move-to', handleMoveTo);
+      }
+      map?.remove();
+    };
   });
 
   // 當外部 location 改變時 (如搜尋選取)，同步更新地圖
