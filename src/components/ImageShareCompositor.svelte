@@ -65,7 +65,16 @@
     };
   }
 
-  const CANVAS_SIZE = 1200;
+  const ASPECT_RATIOS = [
+    { id: 'story', name: '9:16 (限動)', width: 1080, height: 1920, label: 'STORY' },
+    { id: 'square', name: '1:1 (正方)', width: 1200, height: 1200, label: '1:1' },
+    { id: 'portrait', name: '4:5 (人像)', width: 1080, height: 1350, label: '4:5' },
+    { id: 'classic', name: '3:4 (傳統)', width: 1080, height: 1440, label: '3:4' },
+  ];
+
+  let selectedRatio = $state(ASPECT_RATIOS[0]);
+  let canvasWidth = $derived(selectedRatio.width);
+  let canvasHeight = $derived(selectedRatio.height);
 
   // Handle image upload
   function handleImageUpload(e: Event) {
@@ -94,17 +103,17 @@
 
     // 1. Clear Canvas
     ctx.fillStyle = "#F5F2EA"; // Cream background
-    ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
     // 2. Draw User Image
     if (userImage) {
-      const baseScale = Math.max(CANVAS_SIZE / userImage.width, CANVAS_SIZE / userImage.height);
+      const baseScale = Math.max(canvasWidth / userImage.width, canvasHeight / userImage.height);
       const finalScale = baseScale * imageScale;
       const w = userImage.width * finalScale;
       const h = userImage.height * finalScale;
       
-      const startX = (CANVAS_SIZE - w) / 2 + imageX;
-      const startY = (CANVAS_SIZE - h) / 2 + imageY;
+      const startX = (canvasWidth - w) / 2 + imageX;
+      const startY = (canvasHeight - h) / 2 + imageY;
       
       ctx.drawImage(userImage, startX, startY, w, h);
     }
@@ -269,10 +278,10 @@
   function resetAvatarPosition() {
     const currentSize = AVATAR_SIZE * avatarScale;
     if (mode === 'graphics') {
-        avatarX = CANVAS_SIZE - currentSize - 40;
-        avatarY = CANVAS_SIZE - currentSize - 40;
+        avatarX = canvasWidth - currentSize - 40;
+        avatarY = canvasHeight - currentSize - 40;
     } else {
-        avatarX = CANVAS_SIZE - currentSize - 40;
+        avatarX = canvasWidth - currentSize - 40;
         avatarY = 60;
     }
   }
@@ -338,8 +347,8 @@
   function handleMouseDown(e: MouseEvent) {
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) * (CANVAS_SIZE / rect.width);
-    const y = (e.clientY - rect.top) * (CANVAS_SIZE / rect.height);
+    const x = (e.clientX - rect.left) * (canvasWidth / rect.width);
+    const y = (e.clientY - rect.top) * (canvasHeight / rect.height);
     lastX = x;
     lastY = y;
 
@@ -369,8 +378,8 @@
   function handleMouseMove(e: MouseEvent) {
     if (!isDragging || !canvas || !dragTarget) return;
     const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) * (CANVAS_SIZE / rect.width);
-    const y = (e.clientY - rect.top) * (CANVAS_SIZE / rect.height);
+    const x = (e.clientX - rect.left) * (canvasWidth / rect.width);
+    const y = (e.clientY - rect.top) * (canvasHeight / rect.height);
     
     if (dragTarget === 'avatar') {
       const currentSize = AVATAR_SIZE * avatarScale;
@@ -402,8 +411,8 @@
     if (!canvas) return;
     const touch = e.touches[0];
     const rect = canvas.getBoundingClientRect();
-    const x = (touch.clientX - rect.left) * (CANVAS_SIZE / rect.width);
-    const y = (touch.clientY - rect.top) * (CANVAS_SIZE / rect.height);
+    const x = (touch.clientX - rect.left) * (canvasWidth / rect.width);
+    const y = (touch.clientY - rect.top) * (canvasHeight / rect.height);
     lastX = x;
     lastY = y;
 
@@ -437,8 +446,8 @@
     if (!isDragging || !canvas || !dragTarget) return;
     const touch = e.touches[0];
     const rect = canvas.getBoundingClientRect();
-    const x = (touch.clientX - rect.left) * (CANVAS_SIZE / rect.width);
-    const y = (touch.clientY - rect.top) * (CANVAS_SIZE / rect.height);
+    const x = (touch.clientX - rect.left) * (canvasWidth / rect.width);
+    const y = (touch.clientY - rect.top) * (canvasHeight / rect.height);
     
     if (dragTarget === 'avatar') {
       const currentSize = AVATAR_SIZE * avatarScale;
@@ -468,7 +477,7 @@
   $effect(() => {
     // Explicitly track props to avoid unnecessary runs
     const _tags = flavors.join(',');
-    const _deps = [mode, _tags, mood, drinkType, mouthfeel, itemName, locationName, avatarScale, imageScale];
+    const _deps = [mode, selectedRatio, _tags, mood, drinkType, mouthfeel, itemName, locationName, avatarScale, imageScale];
     
     // Draw only when open
     if (isOpen) {
@@ -549,21 +558,46 @@
               />
             </label>
 
-            <div class="flex items-center gap-4">
-              <span class="font-black text-sm uppercase">Mode:</span>
-              <div class="join border-2 border-[--color-border]">
-                <button 
-                  class="join-item px-4 py-2 text-xs font-bold transition-colors {mode === 'graphics' ? 'bg-accent text-black font-black' : 'bg-white text-black hover:bg-bg'}"
-                  onclick={() => mode = 'graphics'}
-                >
-                  GFX ONLY
-                </button>
-                <button 
-                  class="join-item px-4 py-2 text-xs font-bold transition-colors {mode === 'full' ? 'bg-accent text-black font-black' : 'bg-white text-black hover:bg-bg'}"
-                  onclick={() => mode = 'full'}
-                >
-                  FULL INFO
-                </button>
+            <div class="flex flex-col gap-4">
+              <div class="flex items-center gap-4">
+                <span class="font-black text-sm uppercase">Ratio:</span>
+                <div class="join border-2 border-[--color-border] flex-grow">
+                  {#each ASPECT_RATIOS as ratio}
+                    <button 
+                      class="join-item flex-grow px-2 py-2 text-[10px] font-bold transition-colors {selectedRatio.id === ratio.id ? 'bg-accent text-black font-black' : 'bg-white text-black hover:bg-bg'}"
+                      onclick={() => {
+                        selectedRatio = ratio;
+                        // For 9:16 and others, labels might need repositioning
+                        if (ratio.id === 'story') {
+                          labelY = 1200; // Move labels higher for story
+                        } else {
+                          labelY = 850;
+                        }
+                        resetAvatarPosition();
+                      }}
+                    >
+                      {ratio.label}
+                    </button>
+                  {/each}
+                </div>
+              </div>
+
+              <div class="flex items-center gap-4">
+                <span class="font-black text-sm uppercase">Mode:</span>
+                <div class="join border-2 border-[--color-border]">
+                  <button 
+                    class="join-item px-4 py-2 text-xs font-bold transition-colors {mode === 'graphics' ? 'bg-accent text-black font-black' : 'bg-white text-black hover:bg-bg'}"
+                    onclick={() => mode = 'graphics'}
+                  >
+                    GFX ONLY
+                  </button>
+                  <button 
+                    class="join-item px-4 py-2 text-xs font-bold transition-colors {mode === 'full' ? 'bg-accent text-black font-black' : 'bg-white text-black hover:bg-bg'}"
+                    onclick={() => mode = 'full'}
+                  >
+                    FULL INFO
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -587,18 +621,18 @@
                 </button>
             </div>
             <p class="text-[10px] font-bold opacity-40 text-center uppercase tracking-tighter">
-                * 高畫質 1200x1200px PNG，適合分享至 Instagram/Threads
+                * 高畫質 {canvasWidth}x{canvasHeight}px PNG，適合分享至 Instagram/Threads
             </p>
         </div>
       </div>
 
       <!-- Right: Preview -->
       <div class="flex flex-col items-center justify-center gap-4 bg-bg p-4 border-4 border-[--color-border] shadow-[inset_4px_4px_10px_rgba(0,0,0,0.1)]">
-        <div class="relative w-full aspect-square bg-white shadow-brutalist overflow-hidden border-2 border-[--color-border]">
+        <div class="relative w-full bg-white shadow-brutalist overflow-hidden border-2 border-[--color-border]" style="aspect-ratio: {canvasWidth} / {canvasHeight}">
             <canvas 
                 bind:this={canvas} 
-                width={CANVAS_SIZE} 
-                height={CANVAS_SIZE}
+                width={canvasWidth} 
+                height={canvasHeight}
                 class="w-full h-full object-contain cursor-move touch-none"
                 onmousedown={handleMouseDown}
                 onmousemove={handleMouseMove}
