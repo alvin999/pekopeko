@@ -19,7 +19,7 @@ const { data: posts, error } = await supabase
     `
     *,
     profiles (username),
-    shops (name),
+    shops (name, latitude, longitude),
     item_name,
     location_name
   `,
@@ -54,16 +54,14 @@ const { data: posts, error } = await supabase
         <MapExplorer 
           client:load 
           stores={posts
-            .filter(p => (p.shops?.latitude && p.shops?.longitude) || ((p.shops as any)?.[0]?.latitude && (p.shops as any)?.[0]?.longitude))
-            .map(p => {
-              const shop = Array.isArray(p.shops) ? p.shops[0] : p.shops;
-              return {
-                id: shop.id,
-                name: shop.name,
-                lat: shop.latitude,
-                lng: shop.longitude
-              };
-            })
+            .map(p => Array.isArray(p.shops) ? p.shops[0] : p.shops)
+            .filter(s => s && s.latitude && s.longitude)
+            .map(s => ({
+              id: s.id,
+              name: s.name,
+              lat: s.latitude,
+              lng: s.longitude
+            }))
           } 
         />
       )
@@ -137,8 +135,12 @@ const { data: posts, error } = await supabase
 
               <div class="flex items-center justify-between w-full mt-4 border-t-2 border-[--color-border] pt-6">
                 <div class="flex gap-4 items-center">
-                  <div class="flex items-center gap-2">
-                    <span class="text-2xl">
+                  <div 
+                    class="flex items-center gap-2 cursor-pointer group/link hover:bg-[--color-accent] px-2 py-1 -ml-2 transition-colors store-explorer-link"
+                    data-lat={Array.isArray(post.shops) ? post.shops[0]?.latitude : post.shops?.latitude}
+                    data-lng={Array.isArray(post.shops) ? post.shops[0]?.longitude : post.shops?.longitude}
+                  >
+                    <span class="text-2xl group-hover/link:animate-bounce">
                       📍
                     </span>
                     {(post.shops?.name || (post.shops as any)?.[0]?.name || post.location_name) && (
@@ -159,6 +161,26 @@ const { data: posts, error } = await supabase
         ))
       }
     </div>
+
+    {/* 地圖連動腳本 */}
+    <script is:inline>
+      document.addEventListener('click', (e) => {
+        const link = e.target.closest('.store-explorer-link');
+        if (link) {
+          const lat = parseFloat(link.dataset.lat);
+          const lng = parseFloat(link.dataset.lng);
+          if (!isNaN(lat) && !isNaN(lng)) {
+            // 平滑捲動回頂部地圖
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // 發送事件通知地圖
+            window.dispatchEvent(new CustomEvent('pekopeko:map-move-to', {
+              detail: { lat, lng }
+            }));
+          }
+        }
+      });
+    </script>
 
     {
       (!posts || posts.length === 0) && (

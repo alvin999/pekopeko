@@ -1,26 +1,38 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
+  import type maplibregl from 'maplibre-gl';
   import 'maplibre-gl/dist/maplibre-gl.css';
 
   // --- Props ---
+  interface Store {
+    id: string;
+    name: string;
+    lat: number;
+    lng: number;
+  }
+
   interface Props {
     center?: [number, number];
     zoom?: number;
-    stores?: any[];
+    stores?: Store[];
   }
 
   let { 
     center = [121.5654, 25.0330], 
     zoom = 12, 
     stores = [] 
-  } = $props();
+  } = $props<{
+    center?: [number, number];
+    zoom?: number;
+    stores?: Store[];
+  }>();
 
   // --- State (Svelte 5 Runes) ---
   let mapContainer: HTMLDivElement | undefined = $state();
   let isMapInteractive = $state(false);
-  let mapInstance = $state<any>(null);
+  let mapInstance = $state<maplibregl.Map | null>(null);
   let isLocating = $state(false);
-  let markers: any[] = []; // 用於追蹤與清理標記
+  let markers: maplibregl.Marker[] = []; // 用於追蹤與清理標記
 
   // 顯示店家標記
   $effect(() => {
@@ -33,14 +45,14 @@
       markers = [];
 
       // 加入新標記
-      stores.forEach(s => {
+      stores.forEach((s: Store) => {
         if (s.lat && s.lng) {
           const marker = new gl.Marker({ color: '#FE7112' }) // 使用品牌色或顯眼顏色
             .setLngLat([s.lng, s.lat])
             .setPopup(new gl.Popup({ offset: 25 }).setHTML(
               `<div class="p-2 font-bold text-xs">${s.name}</div>`
             ))
-            .addTo(mapInstance);
+            .addTo(mapInstance!);
           markers.push(marker);
         }
       });
@@ -48,10 +60,10 @@
       // 如果有標記，自動調整地圖縮放以包含所有標記
       if (markers.length > 0) {
         const bounds = new gl.LngLatBounds();
-        stores.forEach(s => {
+        stores.forEach((s: Store) => {
           if (s.lng && s.lat) bounds.extend([s.lng, s.lat]);
         });
-        mapInstance.fitBounds(bounds, { padding: 50, maxZoom: 15 });
+        mapInstance!.fitBounds(bounds, { padding: 50, maxZoom: 15 });
       }
     }
   });
@@ -83,12 +95,25 @@
 
   // --- Lifecycle ---
   onMount(() => {
-    let mapInstanceInternal: any = null;
+    let mapInstanceInternal: maplibregl.Map | null = null;
+
+    // 監聽外部「移動到指定位置」的請求
+    const handleMoveTo = (e: any) => {
+      const { lat, lng } = e.detail;
+      if (mapInstanceInternal) {
+        mapInstanceInternal.flyTo({ center: [lng, lat], zoom: 16 });
+        isMapInteractive = true; // 點擊時自動解鎖
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('pekopeko:map-move-to', handleMoveTo);
+    }
 
     async function initMap() {
       // 等待 DOM 與可能需要的 tick
       await tick();
-      // 參考 MapPicker 的做法，延遲 300ms 確保穩定
+      // 延遲 300ms 確保穩定
       await new Promise(resolve => setTimeout(resolve, 300));
 
       if (!mapContainer) return;
@@ -99,7 +124,7 @@
         return;
       }
 
-      // 再次確認數值合法性，防止傳入 null
+      // 再次確認數值合法性
       const safeCenter = Array.isArray(center) ? center : [121.5654, 25.0330];
       const safeZoom = typeof zoom === 'number' ? zoom : 12;
 
@@ -118,6 +143,9 @@
 
     // 清理函數
     return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('pekopeko:map-move-to', handleMoveTo);
+      }
       if (mapInstanceInternal) {
         mapInstanceInternal.remove();
       }
