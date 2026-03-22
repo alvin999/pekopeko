@@ -35,6 +35,8 @@
   let markers: maplibregl.Marker[] = []; // 用於追蹤與清理標記
   let scrollY = $state(0);
   let isSticky = $derived(scrollY > 300);
+  // 動態透明度：置頂且非互動狀態時半透明，增加閱讀舒適度
+  let mapOpacity = $derived((isSticky && !isMapInteractive) ? 0.7 : 1);
 
   // 顯示店家標記
   $effect(() => {
@@ -186,7 +188,10 @@
 
 <svelte:window onscroll={handleWindowScroll} />
 
-<div class="w-full transition-all duration-500 ease-in-out">
+<div 
+  class="w-full transition-all duration-500 ease-in-out"
+  style="opacity: {mapOpacity};"
+>
   <div 
     class="relative w-full transition-all duration-500 ease-in-out overflow-hidden border-4 border-[--color-border] shadow-brutalist bg-white group"
     class:h-[40vh]={!isSticky}
