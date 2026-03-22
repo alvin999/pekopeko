@@ -33,6 +33,8 @@
   let mapInstance = $state<maplibregl.Map | null>(null);
   let isLocating = $state(false);
   let markers: maplibregl.Marker[] = []; // 用於追蹤與清理標記
+  let scrollY = $state(0);
+  let isSticky = $derived(scrollY > 300);
 
   // 顯示店家標記
   $effect(() => {
@@ -184,13 +186,21 @@
 
 <svelte:window onscroll={handleWindowScroll} />
 
-<div class="w-full max-w-4xl mx-auto px-4 mb-12">
-  <div class="relative w-full h-[40vh] min-h-[320px] rounded-3xl overflow-hidden border-4 border-[--color-border] shadow-brutalist bg-white group">
+<div class="w-full transition-all duration-500 ease-in-out">
+  <div 
+    class="relative w-full transition-all duration-500 ease-in-out overflow-hidden border-4 border-[--color-border] shadow-brutalist bg-white group"
+    class:h-[40vh]={!isSticky}
+    class:min-h-[320px]={!isSticky}
+    class:h-[160px]={isSticky}
+    class:rounded-3xl={!isSticky}
+    class:rounded-xl={isSticky}
+    class:shadow-none={isSticky}
+  >
     
     <!-- 地圖容器 -->
     <div bind:this={mapContainer} class="w-full h-full"></div>
 
-    <!-- 互動遮罩 -->
+    <!-- 互動遮罩 (僅在非置頂或未解鎖時顯示核心提示) -->
     {#if !isMapInteractive}
       <!-- svelte-ignore a11y_click_events_have_key_events -->
       <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -198,11 +208,13 @@
         class="absolute inset-0 z-10 flex items-center justify-center cursor-pointer bg-black/5 hover:bg-black/10 transition-colors backdrop-blur-[0.5px]"
         onclick={unlockMap}
       >
-        <div class="bg-white border-4 border-[--color-border] px-6 py-2 shadow-brutalist translate-y-4 group-hover:translate-y-0 transition-all duration-300">
-          <span class="font-black italic uppercase tracking-tighter">
-            點擊以解鎖地圖探索
-          </span>
-        </div>
+        {#if !isSticky}
+          <div class="bg-white border-4 border-[--color-border] px-6 py-2 shadow-brutalist translate-y-4 group-hover:translate-y-0 transition-all duration-300">
+            <span class="font-black italic uppercase tracking-tighter">
+              點擊以解鎖地圖探索
+            </span>
+          </div>
+        {/if}
       </div>
     {/if}
 

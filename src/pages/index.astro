@@ -49,23 +49,28 @@ const { data: posts, error } = await supabase
     </div>
 
     {/* 提取今日熱門的店家座標 */}
-    {
-      posts && (
-        <MapExplorer 
-          client:load 
-          stores={posts
-            .map(p => Array.isArray(p.shops) ? p.shops[0] : p.shops)
-            .filter(s => s && s.latitude && s.longitude)
-            .map(s => ({
-              id: s.id,
-              name: s.name,
-              lat: s.latitude,
-              lng: s.longitude
-            }))
-          } 
-        />
-      )
-    }
+    {/* 地圖區域：支援置頂收合 */}
+    <div class="sticky top-24 z-30 w-full max-w-4xl mx-auto px-4 mb-12 pointer-events-none">
+      <div class="pointer-events-auto">
+        {
+          posts && (
+            <MapExplorer 
+              client:load 
+              stores={posts
+                .map(p => Array.isArray(p.shops) ? p.shops[0] : p.shops)
+                .filter(s => s && s.latitude && s.longitude)
+                .map(s => ({
+                  id: s.id,
+                  name: s.name,
+                  lat: s.latitude,
+                  lng: s.longitude
+                }))
+              } 
+            />
+          )
+        }
+      </div>
+    </div>
 
     {
       error && (
@@ -170,8 +175,13 @@ const { data: posts, error } = await supabase
           const lat = parseFloat(link.dataset.lat);
           const lng = parseFloat(link.dataset.lng);
           if (!isNaN(lat) && !isNaN(lng)) {
-            // 平滑捲動回頂部地圖
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            // 根據捲動位置決定是否要回頂部
+            if (window.scrollY > 300) {
+              // 已經置頂，不需要大幅捲動，或者只捲動到地圖可見範圍
+              window.scrollTo({ top: 120, behavior: 'smooth' });
+            } else {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
             
             // 發送事件通知地圖
             window.dispatchEvent(new CustomEvent('pekopeko:map-move-to', {
