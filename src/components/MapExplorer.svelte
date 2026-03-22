@@ -1,18 +1,22 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import 'maplibre-gl/dist/maplibre-gl.css';
 
   // --- Props ---
   interface Props {
     center?: [number, number];
     zoom?: number;
-    stores?: Array<{ id: string; name: string; lat: number; lng: number }>;
+    stores?: any[];
   }
 
-  let { center = [121.5654, 25.0330], zoom = 12, stores = [] }: Props = $props();
+  let { 
+    center = [121.5654, 25.0330], 
+    zoom = 12, 
+    stores = [] 
+  } = $props();
 
   // --- State (Svelte 5 Runes) ---
-  let mapContainer: HTMLElement | null = $state(null);
+  let mapContainer: HTMLDivElement | undefined = $state();
   let isMapInteractive = $state(false);
   let mapInstance: any = null;
 
@@ -21,6 +25,11 @@
     let mapInstanceInternal: any = null;
 
     async function initMap() {
+      // 等待 DOM 與可能需要的 tick
+      await tick();
+      // 參考 MapPicker 的做法，延遲 300ms 確保穩定
+      await new Promise(resolve => setTimeout(resolve, 300));
+
       if (!mapContainer) return;
 
       const gl = (window as any).maplibregl;
@@ -29,19 +38,22 @@
         return;
       }
 
+      // 再次確認數值合法性，防止傳入 null
+      const safeCenter = Array.isArray(center) ? center : [121.5654, 25.0330];
+      const safeZoom = typeof zoom === 'number' ? zoom : 12;
+
       mapInstanceInternal = new gl.Map({
         container: mapContainer,
-        style: '/map/style.json', // 參考既有組件，使用本機淨化的樣式
-        center: center,
-        zoom: zoom,
+        style: '/map/style.json',
+        center: safeCenter,
+        zoom: safeZoom,
         interactive: false,
       });
       
       mapInstance = mapInstanceInternal;
     }
 
-    // 稍微延遲或等待下一個 tick 確保 DOM 與 CDN 準備好
-    setTimeout(initMap, 100);
+    initMap();
 
     // 清理函數
     return () => {
@@ -87,7 +99,7 @@
   <div class="relative w-full h-[40vh] min-h-[320px] rounded-3xl overflow-hidden border-4 border-[--color-border] shadow-brutalist bg-white group">
     
     <!-- 地圖容器 -->
-    <div bind:this={mapContainer} class="w-full h-full grayscale-[0.5] contrast-[1.1]"></div>
+    <div bind:this={mapContainer} class="w-full h-full"></div>
 
     <!-- 互動遮罩 -->
     {#if !isMapInteractive}
