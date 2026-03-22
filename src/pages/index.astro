@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabase";
 import AvatarGenerator from "../components/AvatarGenerator.svelte";
 import BowButton from "../components/BowButton.svelte";
 import { getLocalDateString } from "../lib/dateUtils";
+import MapExplorer from "../components/MapExplorer.svelte";
 
 const cookieDate = Astro.cookies.get("user_today")?.value;
 const serverToday = getLocalDateString();
@@ -46,6 +47,27 @@ const { data: posts, error } = await supabase
         一日一次的感動足跡。
       </p>
     </div>
+
+    {/* 提取今日熱門的店家座標 */}
+    {
+      posts && (
+        <MapExplorer 
+          client:load 
+          stores={posts
+            .filter(p => (p.shops?.latitude && p.shops?.longitude) || ((p.shops as any)?.[0]?.latitude && (p.shops as any)?.[0]?.longitude))
+            .map(p => {
+              const shop = Array.isArray(p.shops) ? p.shops[0] : p.shops;
+              return {
+                id: shop.id,
+                name: shop.name,
+                lat: shop.latitude,
+                lng: shop.longitude
+              };
+            })
+          } 
+        />
+      )
+    }
 
     {
       error && (

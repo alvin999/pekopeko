@@ -18,7 +18,68 @@
   // --- State (Svelte 5 Runes) ---
   let mapContainer: HTMLDivElement | undefined = $state();
   let isMapInteractive = $state(false);
-  let mapInstance: any = null;
+  let mapInstance = $state<any>(null);
+  let isLocating = $state(false);
+  let markers: any[] = []; // 用於追蹤與清理標記
+
+  // 顯示店家標記
+  $effect(() => {
+    if (mapInstance && stores && stores.length > 0) {
+      const gl = (window as any).maplibregl;
+      if (!gl) return;
+
+      // 清除舊標記
+      markers.forEach(m => m.remove());
+      markers = [];
+
+      // 加入新標記
+      stores.forEach(s => {
+        if (s.lat && s.lng) {
+          const marker = new gl.Marker({ color: '#FE7112' }) // 使用品牌色或顯眼顏色
+            .setLngLat([s.lng, s.lat])
+            .setPopup(new gl.Popup({ offset: 25 }).setHTML(
+              `<div class="p-2 font-bold text-xs">${s.name}</div>`
+            ))
+            .addTo(mapInstance);
+          markers.push(marker);
+        }
+      });
+
+      // 如果有標記，自動調整地圖縮放以包含所有標記
+      if (markers.length > 0) {
+        const bounds = new gl.LngLatBounds();
+        stores.forEach(s => {
+          if (s.lng && s.lat) bounds.extend([s.lng, s.lat]);
+        });
+        mapInstance.fitBounds(bounds, { padding: 50, maxZoom: 15 });
+      }
+    }
+  });
+
+  function relocate() {
+    if (typeof window === 'undefined' || typeof navigator === 'undefined' || !navigator.geolocation) {
+      alert("您的瀏覽器不支援地理定位。");
+      return;
+    }
+
+    isLocating = true;
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        if (mapInstance) {
+          mapInstance.flyTo({ center: [longitude, latitude], zoom: 14 });
+          isMapInteractive = true; // 定位後自動解鎖以便操作
+        }
+        isLocating = false;
+      },
+      (error) => {
+        console.error("定位失敗:", error);
+        alert("無法獲取定位，請檢查權限設定。");
+        isLocating = false;
+      },
+      { enableHighAccuracy: true }
+    );
+  }
 
   // --- Lifecycle ---
   onMount(() => {
@@ -122,6 +183,22 @@
       <div class="bg-[--color-accent] text-[--color-text] border-2 border-[--color-border] px-3 py-1 text-xs font-black uppercase shadow-[2px_2px_0px_0px_var(--color-border)]">
         LIVE EXPLORER
       </div>
+    </div>
+
+    <!-- 定位按鈕 -->
+    <div class="absolute bottom-4 right-4 z-20">
+      <button 
+        class="bg-white border-2 border-[--color-border] p-2 shadow-[2px_2px_0px_0px_var(--color-border)] hover:bg-[--color-accent] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all disabled:opacity-50"
+        onclick={relocate}
+        disabled={isLocating}
+        title="取得目前位置"
+      >
+        {#if isLocating}
+          <div class="w-4 h-4 border-2 border-[--color-border] border-t-transparent rounded-full animate-spin"></div>
+        {:else}
+          <span class="text-sm">📍</span>
+        {/if}
+      </button>
     </div>
   </div>
 </div>
