@@ -35,8 +35,10 @@
   let markers: maplibregl.Marker[] = []; // 用於追蹤與清理標記
   let scrollY = $state(0);
   let isSticky = $derived(scrollY > 300);
-  // 動態透明度：置頂且非互動狀態時半透明，增加閱讀舒適度
-  let mapOpacity = $derived((isSticky && !isMapInteractive) ? 0.7 : 1);
+  // 當置頂且非互動狀態時為「纖薄模式」
+  let isThin = $derived(isSticky && !isMapInteractive);
+  // 動態透明度：纖薄模式下半透明，增加閱讀舒適度
+  let mapOpacity = $derived(isThin ? 0.6 : 1);
 
   // 顯示店家標記
   $effect(() => {
@@ -173,6 +175,15 @@
     }
   });
 
+  // 監聽尺寸變動並調整地圖渲染
+  $effect(() => {
+    if (mapInstance && (isSticky || isThin || isMapInteractive)) {
+      // 在高度動畫執行中或結束後呼叫 resize
+      setTimeout(() => mapInstance?.resize(), 100);
+      setTimeout(() => mapInstance?.resize(), 500);
+    }
+  });
+
   // 點擊解鎖
   function unlockMap() {
     isMapInteractive = true;
@@ -196,7 +207,8 @@
     class="relative w-full transition-all duration-500 ease-in-out overflow-hidden border-4 border-[--color-border] shadow-brutalist bg-white group"
     class:h-[40vh]={!isSticky}
     class:min-h-[320px]={!isSticky}
-    class:h-[160px]={isSticky}
+    class:h-[180px]={isSticky && isMapInteractive}
+    class:h-[80px]={isThin}
     class:rounded-3xl={!isSticky}
     class:rounded-xl={isSticky}
     class:shadow-none={isSticky}
