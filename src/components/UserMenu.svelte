@@ -6,23 +6,34 @@
 
   let user: any = null;
   let latestPost: any = null;
+  let profile: any = null;
   let authListener: any = null;
+  let loading = true;
 
   async function fetchUserStatus(authUser: any) {
     user = authUser;
     if (user) {
       const today = getLocalDateString();
-      const { data } = await supabase.from('posts')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('post_date', today)
-        .order('created_at', { ascending: false })
-        .limit(1);
+      const [postsRes, profileRes] = await Promise.all([
+        supabase.from('posts')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('post_date', today)
+          .order('created_at', { ascending: false })
+          .limit(1),
+        supabase.from('profiles')
+          .select('username')
+          .eq('id', user.id)
+          .single()
+      ]);
       
-      latestPost = data && data.length > 0 ? data[0] : null;
+      latestPost = postsRes.data && postsRes.data.length > 0 ? postsRes.data[0] : null;
+      profile = profileRes.data;
     } else {
       latestPost = null;
+      profile = null;
     }
+    loading = false;
   }
 
   onMount(async () => {
@@ -93,7 +104,7 @@
         <li>
           <a href="/profile" class="font-bold truncate hover:bg-[--color-accent]! transition-colors flex flex-col items-start gap-0.5">
             <span class="text-xs opacity-60 font-medium">View Profile</span>
-            <span class="text-base">{user.user_metadata?.full_name || 'Anonymous'}</span>
+            <span class="text-base">{profile?.username || user.user_metadata?.full_name || 'Anonymous'}</span>
           </a>
         </li>
         <li class="mt-2 border-t-2 border-[--color-border] pt-2">

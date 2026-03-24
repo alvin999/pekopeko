@@ -158,6 +158,9 @@
                 {#if error}
                   <p class="text-xs font-bold text-red-500 italic">{error}</p>
                 {/if}
+                <p class="text-[10px] font-bold opacity-40 italic uppercase mt-1">
+                  💡 此名稱僅在 PekoPeko 顯示，不會修改您的 Google 帳戶名稱。
+                </p>
               </div>
             {:else}
               <h1 class="text-6xl md:text-7xl font-black italic title-outline uppercase tracking-tighter">
