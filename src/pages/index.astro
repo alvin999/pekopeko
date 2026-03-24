@@ -90,14 +90,17 @@ const { data: posts, error } = await supabase
                 {post.drink_type === 'coffee' ? '☕' : '🍵'}
               </div>
               <div class="flex flex-col relative z-20">
-                <div class="flex items-center gap-2 mb-2">
-                  <span class="text-4xl leading-none">
+                <a 
+                  href={`/post/${post.id}`}
+                  class="flex items-center gap-2 mb-2 group/title-link"
+                >
+                  <span class="text-4xl leading-none transition-transform group-hover/title-link:scale-110">
                     {post.mood}
                   </span>
-                  <span class="font-black italic uppercase text-3xl tracking-tighter title-outline-sm leading-none pt-1">
+                  <span class="font-black italic uppercase text-3xl tracking-tighter title-outline-sm leading-none pt-1 transition-colors group-hover/title-link:text-[--color-accent]">
                     {post.item_name || (post.drink_type === 'coffee' ? '咖啡' : '茶')}
                   </span>
-                </div>
+                </a>
                 <div class="flex items-center gap-3">
                   <div class="text-[10px] font-bold opacity-60 bg-black/5 px-2 py-0.5 flex gap-1">
                     <span>POSTED AT:</span>
