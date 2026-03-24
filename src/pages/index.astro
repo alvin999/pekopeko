@@ -23,7 +23,8 @@ const { data: posts, error } = await supabase
     item_name,
     location_name
   `,
-  )
+  { count: "exact" }
+)
   .eq("post_date", today)
   .order("bow_count", { ascending: false });
 ---

@@ -3907,13 +3907,21 @@
       "minzoom": 14,
       "paint": {
         "fill-extrusion-base": [
-          "get",
-          "render_min_height"
+          "coalesce",
+          [
+            "get",
+            "render_min_height"
+          ],
+          0
         ],
         "fill-extrusion-color": "#FFFFFF",
         "fill-extrusion-height": [
-          "get",
-          "render_height"
+          "coalesce",
+          [
+            "get",
+            "render_height"
+          ],
+          0
         ],
         "fill-extrusion-opacity": 0.9
       }

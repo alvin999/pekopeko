@@ -34,7 +34,7 @@
   let isLocating = $state(false);
   let markers: maplibregl.Marker[] = []; // 用於追蹤與清理標記
   let scrollY = $state(0);
-  let isSticky = $derived(scrollY > 300);
+  let isSticky = $derived(scrollY > 100);
   // 當置頂且非互動狀態時為「纖薄模式」
   let isThin = $derived(isSticky && !isMapInteractive);
   // 動態透明度：纖薄模式下半透明，增加閱讀舒適度
@@ -189,9 +189,10 @@
     isMapInteractive = true;
   }
 
-  // 視窗捲動時自動鎖定（防 Scroll Trap）
+  // 視窗捲動時自動更新狀態
   function handleWindowScroll() {
-    if (isMapInteractive) {
+    scrollY = window.scrollY;
+    if (isMapInteractive && !isSticky) {
       isMapInteractive = false;
     }
   }
