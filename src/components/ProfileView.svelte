@@ -182,7 +182,7 @@
             </p>
             
             <div class="mt-4 pt-6 border-t-2 border-[--color-border] border-dashed">
-              {#if false && latestPost}
+              {#if latestPost}
                 <div class="space-y-6">
                   <div class="flex flex-wrap items-center gap-3">
                     <span class="text-xs font-bold opacity-60 italic">
